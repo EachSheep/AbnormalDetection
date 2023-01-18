@@ -8,6 +8,8 @@ Or follow instructions in requirements.txt to install.
 
 ## Running
 
+### train 
+
 ```bash
 python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/datasets/ \
                 --file_name_abnormal feedback.csv \
@@ -23,6 +25,16 @@ python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy
                 --batch_size 48 \
 ```
 
+### test
+
+```bash
+python test.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/datasets/ \
+                --file_name_abnormal feedback.csv \
+                --file_name_normal normal.csv \
+                --filter_num 10 \
+                --vocab_dict_path pre/data/page2id-2023-01-18-12-12-23.json \
+                --max_seq_len 100
+```
 
 ## Reference
 
