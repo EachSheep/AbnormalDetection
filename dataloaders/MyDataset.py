@@ -15,7 +15,7 @@ class MyDataset(Dataset):
         self.args = args
         self.data = data # 一个向量，对应一个标签
         self.label = label
-        self.kwargs = kwargs # 包含每个数据的长度（train_len、test_len），每个数据的label（train_id、test_id）
+        self.kwargs = kwargs # 包含每个数据的长度（len），每个数据的session_id（id），每个数据的user_id（user_id）
 
         self.idx = torch.arange(len(self.data))
         self.normal_idx = torch.argwhere(self.label == 0).flatten()
