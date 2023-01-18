@@ -1,5 +1,8 @@
 data/*
 experiment/*
+jsons/*
+figures/*
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

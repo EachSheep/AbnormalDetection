@@ -1,4 +1,4 @@
-from modeling.networks.resnet18 import feature_resnet18, feature_resnet50
+from modeling.backbone.resnet18 import feature_resnet18, feature_resnet50
 
 NET_OUT_DIM = {'resnet18': 512, 'resnet50': 2048}
 

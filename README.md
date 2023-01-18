@@ -15,7 +15,7 @@ python main.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 --filter_num 10 \
                 --train_ratio 0.8 \
                 --backbone lstma \
-                --vocab_size 1000 \
+                --vocab_size 10000 \
                 --embedding_dim 300 \
                 --hidden_dim 512 \
                 --lr 0.0002 \

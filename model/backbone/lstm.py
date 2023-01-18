@@ -37,6 +37,7 @@ class LSTM(nn.Module):
         use_bidirectional (bool): whether to use bidirectional LSTM
         use_dropout (bool): whether to use dropout
     """
+
     def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim,
                  n_layers=1, use_bidirectional=False, use_dropout=False):
 
@@ -81,7 +82,8 @@ class CNN(nn.Module):
         embedded = embedded.unsqueeze(1)
 
         conved = [F.relu(conv(embedded)).squeeze(3) for conv in self.convs]
-        pooled = [F.max_pool1d(conv, conv.shape[2]).squeeze(2) for conv in conved]
+        pooled = [F.max_pool1d(conv, conv.shape[2]).squeeze(2)
+                  for conv in conved]
 
         cat = self.dropout(torch.cat(pooled, dim=1))
 
@@ -99,13 +101,17 @@ class LSTM_with_Attention(nn.Module):
         use_bidirectional (bool): whether to use bidirectional LSTM
         use_dropout (bool): whether to use dropout
     """
+
     def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim,
                  n_layers=1, use_bidirectional=False, use_dropout=False):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
-        self.rnn = nn.LSTM(embedding_dim, hidden_dim // 2,
-                           bidirectional=use_bidirectional,
-                           dropout=0.5 if use_dropout else 0.)
+        self.rnn = nn.LSTM(
+            embedding_dim,
+            hidden_dim,
+            bidirectional=use_bidirectional,
+            dropout=0.5 if use_dropout else 0.
+        )
         self.fc = nn.Linear(hidden_dim, output_dim)
         self.dropout = nn.Dropout(0.5 if use_dropout else 0.)
 
@@ -128,6 +134,7 @@ class LSTM_with_Attention(nn.Module):
         return torch.bmm(torch.transpose(lstm_output, 1, 2), weights).squeeze(2)
 
     def forward(self, x):
+        x = x.permute(1, 0)
         embedded = self.embedding(x)
         output, (hidden, cell) = self.rnn(embedded)
 

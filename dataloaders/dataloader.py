@@ -4,10 +4,12 @@ import os
 import itertools
 import pandas as pd
 import torch
+import json
+import collections
 from torch.utils.data import DataLoader
 
 from dataloaders.MyDataset import MyDataset
-from dataloaders.utlis import worker_init_fn_seed, BalancedBatchSampler
+from dataloaders.utlis import worker_init_fn_seed, BalancedBatchSampler, RandomedBatchSampler
 
 
 def prepare_normal_data(args, **kwargs):
@@ -20,11 +22,12 @@ def prepare_normal_data(args, **kwargs):
         session_vector_list (torch.LongTensor): 异常用户的session向量
         session_vector_len_list (torch.LongTensor): 异常用户的session向量长度
         session_vector_label_list (torch.LongTensor): 异常用户的session向量标签
-        all_page_name2id (dict): 所有页面的名称到id的映射
-        max_df_normal_cnt (int): 正常用户的session中页面的最大值
+        unknown_page_name (collections.Counter): 未知页面名
+        unknown_page_len (collections.Counter): 超过max_seq_len的页面长度
     """
-    # normal_data_path = os.path.join(
-    #     kwargs['dataset_root'], kwargs['file_name_normal'])
+    page2id = json.load(open(args.vocab_dict_path, 'r'))
+    max_seq_len = args.max_seq_len + 1 # +1是<eos>的位置
+
     normal_data_path = os.path.join(args.dataset_root, args.file_name_normal)
     df_normal = pd.read_csv(normal_data_path)
     df_normal["date_time"] = pd.to_datetime(df_normal.date_time)
@@ -32,21 +35,15 @@ def prepare_normal_data(args, **kwargs):
     df_normal.rename(columns={"index": "unique_id"}, inplace=True)
     print('正常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_normal))
 
-    # 给所有的用户页面编码
-    all_page_name = df_normal['page_name'].unique()
-    all_page_name2id = dict(zip(all_page_name, range(len(all_page_name))))
-    all_page_name2id['<eos>'] = len(all_page_name)
-    all_page_name2id['<pad>'] = len(all_page_name) + 1
-    all_page_name2id['<unk>'] = len(all_page_name) + 2  # 未知页面
-
-    # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。暂定10
+    # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。
     df_normal_cnt = df_normal.groupby("session_id")['unique_id'].count()
     df_normal_larger_id = df_normal_cnt[df_normal_cnt >= args.filter_num]
     df_normal = df_normal[df_normal['session_id'].isin(
         df_normal_larger_id.index)]
-    max_df_normal_cnt = df_normal_cnt.max() + 1
 
     # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]
+    unknown_page_name = []
+    unknown_page_len = []
     session_vector_list = []
     session_vector_len_list = []
     df_normal.sort_values(['date_time'], ascending=[True], inplace=True)
@@ -54,25 +51,34 @@ def prepare_normal_data(args, **kwargs):
     for n, en in df_normal.groupby("session_id"):
         cur_session_vector = []
         for _, e in en.iterrows():
-            cur_session_vector.append(all_page_name2id[e.page_name])
-        cur_session_vector.append(all_page_name2id['<eos>'])
+            if e.page_name in page2id:
+                cur_session_vector.append(page2id[e.page_name])
+            else:
+                cur_session_vector.append(page2id['<unk>'])
+                unknown_page_name.append(e.page_name)
+        if len(cur_session_vector) >= max_seq_len:
+            unknown_page_len.append(len(cur_session_vector))
+            cur_session_vector = cur_session_vector[-(max_seq_len-1):]
+        cur_session_vector.append(page2id['<eos>'])
         len_cur_session_vector = len(cur_session_vector)
-        cur_session_vector.extend(
-            [all_page_name2id['<pad>']] * (max_df_normal_cnt - len_cur_session_vector))
+        # cur_session_vector.extend(
+        #     [page2id['<pad>']] * (max_seq_len - len_cur_session_vector))
         session_vector_list.append(cur_session_vector)
         session_vector_len_list.append(len_cur_session_vector)
 
-    # 转化成[seq_len,batch_size]
+    # 转化成[batch_size, seq_len]
     session_vector_list = list(itertools.zip_longest(
-        session_vector_list, fillvalue=all_page_name2id['<pad>']))
+        *session_vector_list, fillvalue=page2id['<pad>']))
     session_vector_list = torch.LongTensor(
-        session_vector_list)  # shape: [seq_len, batch_size]
+        session_vector_list).T  # shape: [batch_size, seq_len]
     session_vector_len_list = torch.LongTensor(
         session_vector_len_list)  # shape: [batch_size]
     session_vector_label_list = torch.zeros( # 标签全部为0
-        session_vector_list.shape[1], dtype=session_vector_list.dtype)  # shape: [batch_size]
+        session_vector_list.shape[0], dtype=session_vector_list.dtype)  # shape: [batch_size]
 
-    return session_vector_list, session_vector_len_list, session_vector_label_list, all_page_name2id, max_df_normal_cnt
+    unknown_page_name = collections.Counter(unknown_page_name)
+    unknown_page_len = collections.Counter(unknown_page_len)
+    return session_vector_list, session_vector_len_list, session_vector_label_list, unknown_page_name, unknown_page_len
 
 
 def prepare_abnormal_data(args, **kwargs):
@@ -85,14 +91,12 @@ def prepare_abnormal_data(args, **kwargs):
         session_vector_list (torch.LongTensor): 异常用户的session向量
         session_vector_len_list (torch.LongTensor): 异常用户的session向量长度
         session_vector_label_list (torch.LongTensor): 异常用户的session向量标签
-        all_page_name2id (dict): 所有页面的名称到id的映射
-        max_df_normal_cnt (int): 正常用户的session中页面的最大值
+        unknown_page_name (collections.Counter): 未知页面名
+        unknown_page_len (collections.Counter): 超过max_seq_len的页面长度
     """
-    all_page_name2id = kwargs['all_page_name2id']
-    max_df_normal_cnt = kwargs['max_df_normal_cnt']
+    page2id = json.load(open(args.vocab_dict_path, 'r'))
+    max_seq_len = args.max_seq_len + 1
 
-    # abnormal_data_path = os.path.join(
-    #     kwargs['dataset_root'], kwargs['file_name_abnormal'])
     abnormal_data_path = os.path.join(
         args.dataset_root, args.file_name_abnormal)
     df_abnormal = pd.read_csv(abnormal_data_path)
@@ -101,7 +105,7 @@ def prepare_abnormal_data(args, **kwargs):
     df_abnormal.rename(columns={"index": "unique_id"}, inplace=True)
     print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))
 
-    # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。暂定10
+    # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。
     df_abnormal_cnt = df_abnormal.groupby("session_id")['unique_id'].count()
     df_abnormal_larger_id = df_abnormal_cnt[df_abnormal_cnt >= args.filter_num]
     df_abnormal = df_abnormal[df_abnormal['session_id'].isin(
@@ -109,6 +113,8 @@ def prepare_abnormal_data(args, **kwargs):
     print('异常用户：根据session中的页面筛选后用户的轨迹数为：', len(df_abnormal))
 
     # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]
+    unknown_page_name = []
+    unknown_page_len = []
     session_vector_list = []
     session_vector_len_list = []
     df_abnormal.sort_values(['date_time'], ascending=[True], inplace=True)
@@ -116,25 +122,32 @@ def prepare_abnormal_data(args, **kwargs):
     for n, en in df_abnormal.groupby("session_id"):
         cur_session_vector = []
         for _, e in en.iterrows():
-            cur_session_vector.append(all_page_name2id[e.page_name])
-        cur_session_vector.append(all_page_name2id['<eos>'])
+            if e.page_name in page2id:
+                cur_session_vector.append(page2id[e.page_name])
+            else:
+                cur_session_vector.append(page2id['<unk>'])
+                unknown_page_name.append(e.page_name)
+        if len(cur_session_vector) >= max_seq_len:
+            unknown_page_len.append(len(cur_session_vector))
+            cur_session_vector = cur_session_vector[-(max_seq_len-1):]
+        cur_session_vector.append(page2id['<eos>'])
         len_cur_session_vector = len(cur_session_vector)
-        cur_session_vector.extend(
-            [all_page_name2id['<pad>']] * (max_df_normal_cnt - len_cur_session_vector))
         session_vector_list.append(cur_session_vector)
         session_vector_len_list.append(len_cur_session_vector)
 
-    # 转化成[seq_len,batch_size]
+    # 转化成[batch_size, seq_len]
     session_vector_list = list(itertools.zip_longest(
-        session_vector_list, fillvalue=all_page_name2id['<pad>']))
+        *session_vector_list, fillvalue=page2id['<pad>']))
     session_vector_list = torch.LongTensor(
-        session_vector_list)  # shape: [seq_len, batch_size]
+        session_vector_list).T  # shape: [batch_size, seq_len]
     session_vector_len_list = torch.LongTensor(
         session_vector_len_list)  # shape: [batch_size]
     session_vector_label_list = torch.ones(
-        session_vector_list.shape[1], dtype=session_vector_list.dtype)  # shape: [batch_size]
+        session_vector_list.shape[0], dtype=session_vector_list.dtype)  # shape: [batch_size]
 
-    return session_vector_list, session_vector_len_list, session_vector_label_list, all_page_name2id, max_df_normal_cnt
+    unknown_page_name = collections.Counter(unknown_page_name)
+    unknown_page_len = collections.Counter(unknown_page_len)
+    return session_vector_list, session_vector_len_list, session_vector_label_list, unknown_page_name, unknown_page_len
 
 
 def prepare_data(args, **kwargs):
@@ -151,44 +164,54 @@ def prepare_data(args, **kwargs):
         test_len (torch.LongTensor): 测试集的session向量长度
         test_label (torch.LongTensor): 测试集的session向量标签
     """
-    session_vector_list_normal, session_vector_len_list_normal, session_vector_label_list_normal, all_page_name2id, max_df_normal_cnt = prepare_normal_data(
+    session_normal, session_len_normal, session_label_normal, unknown_page_name_normal, unknown_page_len_normal = prepare_normal_data(
         args, **kwargs)
-    kwargs['all_page_name2id'] = all_page_name2id
-    kwargs['max_df_normal_cnt'] = max_df_normal_cnt
-    session_vector_list_abnormal, session_vector_len_list_abnormal, session_vector_label_list_abnormal, _, _ = prepare_abnormal_data(
+    session_abnormal, session_len_abnormal, session_label_abnormal, unknown_page_name_abnormal, unknown_page_len_abnormal = prepare_abnormal_data(
         args, **kwargs)
+    unknown_page_name_normal.update(unknown_page_name_abnormal) 
+    unknown_page_len_normal.update(unknown_page_len_abnormal)
+    unknown_page_name = unknown_page_name_normal
+    unknown_page_len = unknown_page_len_normal
+    del unknown_page_name_normal, unknown_page_len_normal, unknown_page_name_abnormal, unknown_page_len_abnormal
+
+    if not os.path.exists(os.path.join(args.experiment_dir, 'jsons')):
+        os.makedirs(os.path.join(args.experiment_dir, 'jsons'))
+    json.dump(unknown_page_name, open(os.path.join(args.experiment_dir, 'jsons', f'unknown_page_name-{args.cur_time}.json'), 'w'))
+    json.dump(unknown_page_len, open(os.path.join(args.experiment_dir, 'jsons', f'unknown_page_len-{args.cur_time}.json'), 'w'))
 
     # 按照真实数据集的比例混合正常和异常数据，真实数据集的比例即 异常用户数 / 正常用户数
     # 这里假定session_vector_list和session_vector_list_abnormal就是真实数据集，因此不需要进行抽样，直接按照比例混合即可
     torch.manual_seed(args.random_seed)
+
     # 抽样正常数据
-    normal_index = torch.randperm(session_vector_list_normal.shape[1])
-    train_normal_index = normal_index[:int(session_vector_list_normal.shape[1] * args.train_ratio)]
-    test_normal_index = normal_index[int(session_vector_list_normal.shape[1] * args.train_ratio):]
-    train_normal_data = session_vector_list_normal[:, train_normal_index]
-    train_normal_len = session_vector_len_list_normal[train_normal_index]
-    train_normal_label = session_vector_label_list_normal[train_normal_index]
-    test_normal_data = session_vector_list_normal[:, test_normal_index]
-    test_normal_len = session_vector_len_list_normal[test_normal_index]
-    test_normal_label = session_vector_label_list_normal[test_normal_index]
+    normal_index = torch.randperm(session_normal.shape[0])
+    train_normal_index = normal_index[:int(session_normal.shape[0] * args.train_ratio)]
+    test_normal_index = normal_index[int(session_normal.shape[0] * args.train_ratio):]
+    train_normal_data = session_normal[train_normal_index]
+    train_normal_len = session_len_normal[train_normal_index]
+    train_normal_label = session_label_normal[train_normal_index]
+    test_normal_data = session_normal[test_normal_index]
+    test_normal_len = session_len_normal[test_normal_index]
+    test_normal_label = session_label_normal[test_normal_index]
+
     # 抽样异常数据
-    abnormal_index = torch.randperm(session_vector_list_abnormal.shape[1])
-    train_abnormal_index = abnormal_index[:int(session_vector_list_abnormal.shape[1] * args.train_ratio)]
-    test_abnormal_index = abnormal_index[int(session_vector_list_abnormal.shape[1] * args.train_ratio):]
-    train_abnormal_data = session_vector_list_abnormal[:, train_abnormal_index]
-    train_abnormal_len = session_vector_len_list_abnormal[train_abnormal_index]
-    train_abnormal_label = session_vector_label_list_abnormal[train_abnormal_index]
-    test_abnormal_data = session_vector_list_abnormal[:, test_abnormal_index]
-    test_abnormal_len = session_vector_len_list_abnormal[test_abnormal_index]
-    test_abnormal_label = session_vector_label_list_abnormal[test_abnormal_index]
+    abnormal_index = torch.randperm(session_abnormal.shape[0])
+    train_abnormal_index = abnormal_index[:int(session_abnormal.shape[0] * args.train_ratio)]
+    test_abnormal_index = abnormal_index[int(session_abnormal.shape[0] * args.train_ratio):]
+    train_abnormal_data = session_abnormal[train_abnormal_index]
+    train_abnormal_len = session_len_abnormal[train_abnormal_index]
+    train_abnormal_label = session_label_abnormal[train_abnormal_index]
+    test_abnormal_data = session_abnormal[test_abnormal_index]
+    test_abnormal_len = session_len_abnormal[test_abnormal_index]
+    test_abnormal_label = session_label_abnormal[test_abnormal_index]
 
     # 合并训练数据
-    train_data = torch.cat((train_normal_data, train_abnormal_data), dim=1)
+    train_data = torch.cat((train_normal_data, train_abnormal_data), dim=0)
     train_len = torch.cat((train_normal_len, train_abnormal_len), dim=0)
     train_label = torch.cat((train_normal_label, train_abnormal_label), dim=0)
 
     # 合并测试数据
-    test_data = torch.cat((test_normal_data, test_abnormal_data), dim=1)
+    test_data = torch.cat((test_normal_data, test_abnormal_data), dim=0)
     test_len = torch.cat((test_normal_len, test_abnormal_len), dim=0)
     test_label = torch.cat((test_normal_label, test_abnormal_label), dim=0)
 
@@ -216,9 +239,10 @@ def build_dataloader(args, **kwargs):
     )
     test_loader = DataLoader(
         test_set,
-        batch_size=args.batch_size,
-        shuffle=False,
+        # batch_size=args.batch_size,
+        # shuffle=False,
         worker_init_fn=worker_init_fn_seed,
+        batch_sampler=RandomedBatchSampler(args, test_set),
         **kwargs
     )
     return train_loader, test_loader

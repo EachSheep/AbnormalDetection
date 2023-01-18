@@ -16,7 +16,7 @@ class Trainer(object):
         kargs = {'num_workers': args.workers}
         self.train_loader, self.test_loader = build_dataloader(args, **kargs)
         self.model = LSTMNet(args) # 定义网络
-        self.criterion = build_criterion(args.criterion)
+        self.criterion = build_criterion(args)
         if args.optimizer == "Adam":
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         elif args.optimizer == "SGD":
@@ -39,11 +39,11 @@ class Trainer(object):
         train_loss = 0.0
         tbar = tqdm(self.train_loader)
         for i, sample in enumerate(tbar):
-            single_data, label = sample['data'], sample['label']
+            batch_data, label = sample['data'], sample['label']
             if self.args.cuda:
-                single_data, label = single_data.cuda(), label.cuda()
+                batch_data, label = batch_data.cuda(), label.cuda()
 
-            output = self.model(single_data)
+            output = self.model(batch_data)
             loss = self.criterion(output, label.unsqueeze(1).float())
             self.optimizer.zero_grad()
             loss.backward()
@@ -54,7 +54,13 @@ class Trainer(object):
             tbar.set_description('Epoch:%d, Train loss: %.3f' % (epoch, train_loss / (i + 1)))
         self.scheduler.step()
 
+        cur_epoch_loss = train_loss / (i + 1)
+        return cur_epoch_loss
+
     def eval(self):
+        """测试一个args.steps_per_epoch个batch的数据
+        异常检测更加关注异常样本的检测情况，这里主要关注PR曲线，即精确度和召回率。
+        """
         self.model.eval()
 
         test_loss = 0.0
@@ -62,12 +68,12 @@ class Trainer(object):
         total_pred = np.array([])
         total_target = np.array([])
         for i, sample in enumerate(tbar):
-            single_data, label = sample['data'], sample['label']
+            batch_data, label = sample['data'], sample['label']
             if self.args.cuda:
-                single_data, label = single_data.cuda(), label.cuda()
+                batch_data, label = batch_data.cuda(), label.cuda()
 
             with torch.no_grad():
-                output = self.model(single_data.float())
+                output = self.model(batch_data)
             loss = self.criterion(output, label.unsqueeze(1).float())
 
             test_loss += loss.item()
@@ -75,8 +81,10 @@ class Trainer(object):
             
             total_pred = np.append(total_pred, output.data.cpu().numpy())
             total_target = np.append(total_target, label.cpu().numpy())
-        roc, ap = aucPerformance(total_pred, total_target)
-        return roc, ap
+
+        cur_epoch_loss = test_loss / (i + 1)
+        roc_auc, pr_auc = aucPerformance(total_pred, total_target)
+        return roc_auc, pr_auc, cur_epoch_loss
 
     def save_weights(self, filename = None):
         if filename == None:

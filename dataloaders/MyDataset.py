@@ -16,6 +16,7 @@ class MyDataset(Dataset):
         self.data = data # 一个向量，对应一个标签
         self.label = label
 
+        self.idx = torch.arange(len(self.data))
         self.normal_idx = torch.argwhere(self.label == 0).flatten()
         self.outlier_idx = torch.argwhere(self.label == 1).flatten()
 

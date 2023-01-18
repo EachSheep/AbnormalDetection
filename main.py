@@ -3,6 +3,7 @@ import os
 import time
 
 import torch
+from torch.utils.tensorboard import SummaryWriter
 
 from Trainer import Trainer
 
@@ -24,11 +25,15 @@ parser.add_argument('--no_cuda', action='store_true',
 
 # 数据集设置
 parser.add_argument('--dataset_root', type=str,
-                    default='./data/', help="dataset root")  # 数据集存放的根目录
+                    default='./data/datasets/', help="dataset root")  # 数据集存放的根目录
 parser.add_argument('--file_name_abnormal', type=str, default='feedback.csv',
                     help="anomaly file name")  # 异常数据文件名，也就是feedback用户的行为轨迹
 parser.add_argument('--file_name_normal', type=str, default='normal.csv',
                     help="normal file name")  # 正常数据文件名，也就是normal用户的行为轨迹
+parser.add_argument('--vocab_dict_path', type=str, default='pre/data/page2id-2023-01-18-12-12-23.json',
+                    help="vocab dict path")  # 页面->id的字典存放路径
+parser.add_argument('--max_seq_len', type=int, default=100,
+                    help="vocab dict path")  # 页面->id的字典存放路径
 parser.add_argument('--filter_num', type=float, default=10, help="filter num")  # 筛除用户行为轨迹中出现次数少于filter_num的session
 parser.add_argument('--train_ratio', type=float, default=0.8,
                     help="train test split ratio")  # 训练集和测试集划分的比例
@@ -36,7 +41,7 @@ parser.add_argument('--train_ratio', type=float, default=0.8,
 # 模型设置
 parser.add_argument('--backbone', type=str, default='lstma',
                     help="the backbone network")
-parser.add_argument('--vocab_size', type=int, default=1000,
+parser.add_argument('--vocab_size', type=int, default=10000,
                     help="the vocab_size")  # 词汇表大小
 parser.add_argument('--embedding_dim', type=int,
                     default=300, help="the embedding_dim")
@@ -66,14 +71,16 @@ parser.add_argument('--scheduler_gamma', type=float,
 parser.add_argument("--epochs", type=int, default=50,
                     help="the number of epochs")
 parser.add_argument("--batch_size", type=int, default=48,
-                    help="batch size used in SGD")
-parser.add_argument("--steps_per_epoch", type=int, default=20,
+                    help="batch size used")
+parser.add_argument("--steps_per_epoch", type=int, default=20, # 一个epoch中的batch数
                     help="the number of batches per epoch")
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
+cur_time = '2023-01-18-12-12-23'
 args.weight_name = args.weight_name.format(cur_time)
+args.cur_time = cur_time
 
 if __name__ == '__main__':
 
@@ -84,19 +91,27 @@ if __name__ == '__main__':
     if not os.path.exists(args.experiment_dir):
         os.makedirs(args.experiment_dir)
 
-    args_dict = args.__dict__
     setting_path = os.path.join(args.experiment_dir, 'setting.txt')
     with open(setting_path, 'w') as f:
         f.writelines('------------------ start ------------------' + '\n')
-        for cur_arg, cur_value in args_dict.items():
+        for cur_arg, cur_value in args.__dict__.items():
             f.writelines(cur_arg + ' : ' + str(cur_value) + '\n')
         f.writelines('------------------- end -------------------')
-
+    
+    writer = SummaryWriter(os.path.join(args.experiment_dir, f'runs/{args.cur_time}.log'))
     roc_list, ap_list = [], []
+    
     for cur_epoch in range(0, trainer.args.epochs):
-        trainer.train(cur_epoch)
-        if (cur_epoch + 1) % 10 == 0:
-            roc, ap = trainer.eval()
-            roc_list.append(roc)
-            ap_list.append(ap)
-            print('cur_epoch: ', cur_epoch, 'roc: ', roc, 'ap: ', ap)
+        cur_train_loss = trainer.train(cur_epoch)
+        writer.add_scalar("train_loss", cur_train_loss, cur_epoch)
+        
+        if (cur_epoch + 1) % 5 == 0:
+            cur_roc, cur_pr, cur_test_loss = trainer.eval()
+            roc_list.append(cur_roc)
+            ap_list.append(cur_pr)
+            writer.add_scalar("test_roc", cur_roc, cur_epoch)
+            writer.add_scalar("test_pr", cur_pr, cur_epoch)
+            writer.add_scalar("test_loss", cur_test_loss, cur_epoch)
+    
+    writer.flush()
+    writer.close()

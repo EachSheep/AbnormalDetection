@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from modeling.networks.lstm import LSTM_with_Attention, LSTM, RNN
+from model.backbone.lstm import LSTM_with_Attention, LSTM, RNN
 
 
 class LSTMNet(nn.Module):
@@ -33,8 +33,11 @@ class LSTMNet(nn.Module):
         else:
             print("backbone not supported")
             raise NotImplementedError
+        # self.softmax = F.softmax
+        self.sigmoid = F.sigmoid
 
-    def forward(self, single_data):
-        feature = self.feature_extractor(single_data) # (batch_size, 1)
-        score = feature
+    def forward(self, batch_data):
+        score = self.feature_extractor(batch_data) # (batch_size, 1)
+        # score = self.softmax(score, dim = 1)
+        score = self.sigmoid(score)
         return score.view(-1, 1)
