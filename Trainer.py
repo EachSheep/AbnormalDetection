@@ -3,18 +3,18 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from dataloaders.dataloader import build_dataloader
+from dataloaders.dataloader import build_train_dataloader
 from model.lstmnet import LSTMNet
 from model.criterion import build_criterion
 
-from utils import aucPerformance
+from sklearn.metrics import average_precision_score, roc_auc_score, recall_score, precision_score
 
 class Trainer(object):
 
     def __init__(self, args):
         self.args = args
         kargs = {'num_workers': args.workers}
-        self.train_loader, self.test_loader = build_dataloader(args, **kargs)
+        self.train_loader, self.test_loader = build_train_dataloader(args, **kargs)
         self.model = LSTMNet(args) # 定义网络
         self.criterion = build_criterion(args)
         if args.optimizer == "Adam":
@@ -83,11 +83,18 @@ class Trainer(object):
             total_target = np.append(total_target, label.cpu().numpy())
 
         cur_epoch_loss = test_loss / (i + 1)
-        roc_auc, pr_auc = aucPerformance(total_pred, total_target)
+        roc_auc = roc_auc_score(total_target, total_pred)
+        pr_auc = average_precision_score(total_target, total_pred)
+        print("ROC-AUC: %.4f, PR-AUC: %.4f." % (roc_auc, pr_auc))
+        # rscore = recall_score(total_target , total_pred)
+        # pscore = precision_score(total_target, total_pred)
+        # print("ROC-AUC: %.4f, PR-AUC: %.4f, RSCORE: %.4f, PSCORE: %.4f." % (roc_auc, pr_auc, rscore, pscore))
+
         return roc_auc, pr_auc, cur_epoch_loss
+        # return roc_auc, pr_auc, rscore, pscore, cur_epoch_loss
 
     def save_weights(self, filename = None):
         if filename == None:
-            torch.save(self.model.state_dict(), os.path.join(self.args.experiment_dir, self.weight_name))
+            torch.save(self.model.state_dict(), os.path.join(self.args.experiment_dir, 'models', self.args.weight_name))
         else:
-            torch.save(self.model.state_dict(), os.path.join(self.args.experiment_dir, filename))
+            torch.save(self.model.state_dict(), os.path.join(self.args.experiment_dir, 'models', filename))

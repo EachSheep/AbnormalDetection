@@ -1,11 +1,6 @@
 import argparse
-import os
 import time
-
 import torch
-from torch.utils.tensorboard import SummaryWriter
-
-from Trainer import Trainer
 
 parser = argparse.ArgumentParser()
 
@@ -81,37 +76,3 @@ cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
 cur_time = '2023-01-18-12-12-23'
 args.weight_name = args.weight_name.format(cur_time)
 args.cur_time = cur_time
-
-if __name__ == '__main__':
-
-    torch.manual_seed(args.random_seed)
-
-    trainer = Trainer(args)
-
-    if not os.path.exists(args.experiment_dir):
-        os.makedirs(args.experiment_dir)
-
-    setting_path = os.path.join(args.experiment_dir, 'setting.txt')
-    with open(setting_path, 'w') as f:
-        f.writelines('------------------ start ------------------' + '\n')
-        for cur_arg, cur_value in args.__dict__.items():
-            f.writelines(cur_arg + ' : ' + str(cur_value) + '\n')
-        f.writelines('------------------- end -------------------')
-    
-    writer = SummaryWriter(os.path.join(args.experiment_dir, f'runs/{args.cur_time}.log'))
-    roc_list, ap_list = [], []
-    
-    for cur_epoch in range(0, trainer.args.epochs):
-        cur_train_loss = trainer.train(cur_epoch)
-        writer.add_scalar("train_loss", cur_train_loss, cur_epoch)
-        
-        if (cur_epoch + 1) % 5 == 0:
-            cur_roc, cur_pr, cur_test_loss = trainer.eval()
-            roc_list.append(cur_roc)
-            ap_list.append(cur_pr)
-            writer.add_scalar("test_roc", cur_roc, cur_epoch)
-            writer.add_scalar("test_pr", cur_pr, cur_epoch)
-            writer.add_scalar("test_loss", cur_test_loss, cur_epoch)
-    
-    writer.flush()
-    writer.close()

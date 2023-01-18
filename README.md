@@ -9,7 +9,7 @@ Or follow instructions in requirements.txt to install.
 ## Running
 
 ```bash
-python main.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/datasets/ \
+python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/datasets/ \
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
                 --filter_num 10 \

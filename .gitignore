@@ -2,6 +2,7 @@ data/*
 experiment/*
 jsons/*
 figures/*
+models/*
 
 
 # Byte-compiled / optimized / DLL files
