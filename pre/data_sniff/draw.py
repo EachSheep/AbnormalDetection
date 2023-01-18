@@ -75,6 +75,8 @@ def draw_session_pagenum():
     normal_page_num = normal["page_name"].unique()
     feedback_page_num = feedback["page_name"].unique()
     merged_page_num = list(set(normal_page_num) | set(feedback_page_num))
+    print("normal_page_num:", len(normal_page_num))
+    print("feedback_page_num:", len(feedback_page_num))
     print("merged_page_num:", len(merged_page_num))
 
 if __name__ == "__main__":

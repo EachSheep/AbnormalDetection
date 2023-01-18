@@ -4,8 +4,8 @@ import torch
 from tqdm import tqdm
 
 from dataloaders.dataloader import build_dataloader
-from modeling.lstmnet import LSTMNet
-from modeling.layers import build_criterion
+from model.lstmnet import LSTMNet
+from model.criterion import build_criterion
 
 from utils import aucPerformance
 

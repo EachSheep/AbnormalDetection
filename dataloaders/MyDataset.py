@@ -10,11 +10,12 @@ class MyDataset(Dataset):
         train: 是否为训练集, True代表载入训练集, False代表载入测试集
     """
 
-    def __init__(self, args, data, label):
+    def __init__(self, args, data, label, **kwargs):
         super(MyDataset).__init__()
         self.args = args
         self.data = data # 一个向量，对应一个标签
         self.label = label
+        self.kwargs = kwargs # 包含每个数据的长度（train_len、test_len），每个数据的label（train_id、test_id）
 
         self.idx = torch.arange(len(self.data))
         self.normal_idx = torch.argwhere(self.label == 0).flatten()

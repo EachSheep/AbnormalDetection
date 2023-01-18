@@ -21,12 +21,14 @@ def prepare_normal_data(args, **kwargs):
     Returns:
         session_vector_list (torch.LongTensor): 异常用户的session向量
         session_vector_len_list (torch.LongTensor): 异常用户的session向量长度
+        session_vector_id_list (pd.DataFrame): 用户的session_id
+        session_vector_user_id_list (pd.DataFrame): 用户的user_id
         session_vector_label_list (torch.LongTensor): 异常用户的session向量标签
         unknown_page_name (collections.Counter): 未知页面名
         unknown_page_len (collections.Counter): 超过max_seq_len的页面长度
     """
     page2id = json.load(open(args.vocab_dict_path, 'r'))
-    max_seq_len = args.max_seq_len + 1 # +1是<eos>的位置
+    max_seq_len = args.max_seq_len + 1  # +1是<eos>的位置
 
     normal_data_path = os.path.join(args.dataset_root, args.file_name_normal)
     df_normal = pd.read_csv(normal_data_path)
@@ -46,16 +48,25 @@ def prepare_normal_data(args, **kwargs):
     unknown_page_len = []
     session_vector_list = []
     session_vector_len_list = []
+    session_vector_id_list = []  # session_id
+    session_vector_user_id_list = []  # user_id
     df_normal.sort_values(['date_time'], ascending=[True], inplace=True)
     # df_normal.sort_values(['date_time', 'sort_source'], ascending=[True, True], inplace=True)
     for n, en in df_normal.groupby("session_id"):
+        session_vector_id_list.append(n)
         cur_session_vector = []
+        first = True
+        cur_user_id = None
         for _, e in en.iterrows():
+            if first:
+                cur_user_id = e.user_id
+                first = False
             if e.page_name in page2id:
                 cur_session_vector.append(page2id[e.page_name])
             else:
                 cur_session_vector.append(page2id['<unk>'])
                 unknown_page_name.append(e.page_name)
+        session_vector_user_id_list.append(cur_user_id)
         if len(cur_session_vector) >= max_seq_len:
             unknown_page_len.append(len(cur_session_vector))
             cur_session_vector = cur_session_vector[-(max_seq_len-1):]
@@ -73,12 +84,16 @@ def prepare_normal_data(args, **kwargs):
         session_vector_list).T  # shape: [batch_size, seq_len]
     session_vector_len_list = torch.LongTensor(
         session_vector_len_list)  # shape: [batch_size]
-    session_vector_label_list = torch.zeros( # 标签全部为0
+    session_vector_id_list = pd.DataFrame(
+        session_vector_id_list, columns=['session_id'])  # shape: [batch_size]
+    session_vector_user_id_list = pd.DataFrame(
+        session_vector_user_id_list, columns=['user_id'])  # shape: [batch_size]
+    session_vector_label_list = torch.zeros(  # 标签全部为0
         session_vector_list.shape[0], dtype=session_vector_list.dtype)  # shape: [batch_size]
 
     unknown_page_name = collections.Counter(unknown_page_name)
     unknown_page_len = collections.Counter(unknown_page_len)
-    return session_vector_list, session_vector_len_list, session_vector_label_list, unknown_page_name, unknown_page_len
+    return session_vector_list, session_vector_len_list, session_vector_id_list, session_vector_user_id_list, session_vector_label_list, unknown_page_name, unknown_page_len
 
 
 def prepare_abnormal_data(args, **kwargs):
@@ -90,6 +105,8 @@ def prepare_abnormal_data(args, **kwargs):
     Returns:
         session_vector_list (torch.LongTensor): 异常用户的session向量
         session_vector_len_list (torch.LongTensor): 异常用户的session向量长度
+        session_vector_id_list (pd.DataFrame): 用户的session_id
+        session_vector_user_id_list (pd.DataFrame): 用户的user_id
         session_vector_label_list (torch.LongTensor): 异常用户的session向量标签
         unknown_page_name (collections.Counter): 未知页面名
         unknown_page_len (collections.Counter): 超过max_seq_len的页面长度
@@ -117,16 +134,25 @@ def prepare_abnormal_data(args, **kwargs):
     unknown_page_len = []
     session_vector_list = []
     session_vector_len_list = []
+    session_vector_id_list = []
+    session_vector_user_id_list = []
     df_abnormal.sort_values(['date_time'], ascending=[True], inplace=True)
     # df_abnormal.sort_values(['date_time', 'sort_source'], ascending=[True, True], inplace=True)
     for n, en in df_abnormal.groupby("session_id"):
+        session_vector_id_list.append(n)
         cur_session_vector = []
+        first = True
+        cur_user_id = None
         for _, e in en.iterrows():
+            if first:
+                cur_user_id = e.user_id
+                first = False
             if e.page_name in page2id:
                 cur_session_vector.append(page2id[e.page_name])
             else:
                 cur_session_vector.append(page2id['<unk>'])
                 unknown_page_name.append(e.page_name)
+        session_vector_user_id_list.append(cur_user_id)
         if len(cur_session_vector) >= max_seq_len:
             unknown_page_len.append(len(cur_session_vector))
             cur_session_vector = cur_session_vector[-(max_seq_len-1):]
@@ -142,12 +168,16 @@ def prepare_abnormal_data(args, **kwargs):
         session_vector_list).T  # shape: [batch_size, seq_len]
     session_vector_len_list = torch.LongTensor(
         session_vector_len_list)  # shape: [batch_size]
+    session_vector_id_list = pd.DataFrame(
+        session_vector_id_list, columns=['session_id'])  # shape: [batch_size]
+    session_vector_user_id_list = pd.DataFrame(
+        session_vector_user_id_list, columns=['user_id'])  # shape: [batch_size]
     session_vector_label_list = torch.ones(
         session_vector_list.shape[0], dtype=session_vector_list.dtype)  # shape: [batch_size]
 
     unknown_page_name = collections.Counter(unknown_page_name)
     unknown_page_len = collections.Counter(unknown_page_len)
-    return session_vector_list, session_vector_len_list, session_vector_label_list, unknown_page_name, unknown_page_len
+    return session_vector_list, session_vector_len_list, session_vector_id_list, session_vector_user_id_list, session_vector_label_list, unknown_page_name, unknown_page_len
 
 
 def prepare_data(args, **kwargs):
@@ -159,16 +189,20 @@ def prepare_data(args, **kwargs):
     Returns:
         train_data (torch.LongTensor): 训练集的session向量
         train_len (torch.LongTensor): 训练集的session向量长度
+        train_id (pd.DataFrame): 训练集的session_id
+        train_user_id (pd.DataFrame): 训练集的user_id
         train_label (torch.LongTensor): 训练集的session向量标签
         test_data (torch.LongTensor): 测试集的session向量
         test_len (torch.LongTensor): 测试集的session向量长度
+        test_id (pd.DataFrame): 测试集的session_id
+        test_user_id (pd.DataFrame): 测试集的user_id
         test_label (torch.LongTensor): 测试集的session向量标签
     """
-    session_normal, session_len_normal, session_label_normal, unknown_page_name_normal, unknown_page_len_normal = prepare_normal_data(
+    session_normal, session_len_normal, session_id_normal, session_user_id_normal, session_label_normal, unknown_page_name_normal, unknown_page_len_normal = prepare_normal_data(
         args, **kwargs)
-    session_abnormal, session_len_abnormal, session_label_abnormal, unknown_page_name_abnormal, unknown_page_len_abnormal = prepare_abnormal_data(
+    session_abnormal, session_len_abnormal, session_id_abnormal, session_user_id_abnormal, session_label_abnormal, unknown_page_name_abnormal, unknown_page_len_abnormal = prepare_abnormal_data(
         args, **kwargs)
-    unknown_page_name_normal.update(unknown_page_name_abnormal) 
+    unknown_page_name_normal.update(unknown_page_name_abnormal)
     unknown_page_len_normal.update(unknown_page_len_abnormal)
     unknown_page_name = unknown_page_name_normal
     unknown_page_len = unknown_page_len_normal
@@ -176,8 +210,10 @@ def prepare_data(args, **kwargs):
 
     if not os.path.exists(os.path.join(args.experiment_dir, 'jsons')):
         os.makedirs(os.path.join(args.experiment_dir, 'jsons'))
-    json.dump(unknown_page_name, open(os.path.join(args.experiment_dir, 'jsons', f'unknown_page_name-{args.cur_time}.json'), 'w'))
-    json.dump(unknown_page_len, open(os.path.join(args.experiment_dir, 'jsons', f'unknown_page_len-{args.cur_time}.json'), 'w'))
+    json.dump(unknown_page_name, open(os.path.join(args.experiment_dir,
+              'jsons', f'unknown_page_name-{args.cur_time}.json'), 'w'))
+    json.dump(unknown_page_len, open(os.path.join(args.experiment_dir,
+              'jsons', f'unknown_page_len-{args.cur_time}.json'), 'w'))
 
     # 按照真实数据集的比例混合正常和异常数据，真实数据集的比例即 异常用户数 / 正常用户数
     # 这里假定session_vector_list和session_vector_list_abnormal就是真实数据集，因此不需要进行抽样，直接按照比例混合即可
@@ -185,37 +221,66 @@ def prepare_data(args, **kwargs):
 
     # 抽样正常数据
     normal_index = torch.randperm(session_normal.shape[0])
-    train_normal_index = normal_index[:int(session_normal.shape[0] * args.train_ratio)]
-    test_normal_index = normal_index[int(session_normal.shape[0] * args.train_ratio):]
+    train_normal_index = normal_index[:int(
+        session_normal.shape[0] * args.train_ratio)]
+    test_normal_index = normal_index[int(
+        session_normal.shape[0] * args.train_ratio):]
     train_normal_data = session_normal[train_normal_index]
     train_normal_len = session_len_normal[train_normal_index]
+    train_normal_id = session_id_normal.iloc[train_normal_index.tolist(), :]
+    train_normal_user_id = session_user_id_normal.iloc[train_normal_index.tolist(
+    ), :]
     train_normal_label = session_label_normal[train_normal_index]
     test_normal_data = session_normal[test_normal_index]
     test_normal_len = session_len_normal[test_normal_index]
+    test_normal_id = session_id_normal.iloc[test_normal_index.tolist(), :]
+    test_normal_user_id = session_user_id_normal.iloc[test_normal_index.tolist(
+    ), :]
     test_normal_label = session_label_normal[test_normal_index]
 
     # 抽样异常数据
     abnormal_index = torch.randperm(session_abnormal.shape[0])
-    train_abnormal_index = abnormal_index[:int(session_abnormal.shape[0] * args.train_ratio)]
-    test_abnormal_index = abnormal_index[int(session_abnormal.shape[0] * args.train_ratio):]
+    train_abnormal_index = abnormal_index[:int(
+        session_abnormal.shape[0] * args.train_ratio)]
+    test_abnormal_index = abnormal_index[int(
+        session_abnormal.shape[0] * args.train_ratio):]
     train_abnormal_data = session_abnormal[train_abnormal_index]
     train_abnormal_len = session_len_abnormal[train_abnormal_index]
+    train_abnormal_id = session_id_abnormal.iloc[train_abnormal_index.tolist(
+    ), :]
+    train_abnormal_user_id = session_user_id_abnormal.iloc[train_abnormal_index.tolist(
+    ), :]
     train_abnormal_label = session_label_abnormal[train_abnormal_index]
     test_abnormal_data = session_abnormal[test_abnormal_index]
     test_abnormal_len = session_len_abnormal[test_abnormal_index]
+    test_abnormal_id = session_id_abnormal.iloc[test_abnormal_index.tolist(
+    ), :]
+    test_abnormal_user_id = session_user_id_abnormal.iloc[test_abnormal_index.tolist(
+    ), :]
     test_abnormal_label = session_label_abnormal[test_abnormal_index]
 
     # 合并训练数据
     train_data = torch.cat((train_normal_data, train_abnormal_data), dim=0)
     train_len = torch.cat((train_normal_len, train_abnormal_len), dim=0)
+    train_id = pd.concat((train_normal_id, train_abnormal_id), axis=0)
+    train_user_id = pd.concat(
+        (train_normal_user_id, train_abnormal_user_id), axis=0)
     train_label = torch.cat((train_normal_label, train_abnormal_label), dim=0)
+    train_id = train_id.reset_index(drop=True)
+    train_user_id = train_user_id.reset_index(drop=True)
 
     # 合并测试数据
     test_data = torch.cat((test_normal_data, test_abnormal_data), dim=0)
     test_len = torch.cat((test_normal_len, test_abnormal_len), dim=0)
+    test_id = pd.concat((test_normal_id, test_abnormal_id), axis=0)
+    test_user_id = pd.concat(
+        (test_normal_user_id, test_abnormal_user_id), axis=0)
     test_label = torch.cat((test_normal_label, test_abnormal_label), dim=0)
+    test_id = test_id.reset_index(drop=True)
+    test_user_id = test_user_id.reset_index(drop=True)
 
-    return train_data, train_len, train_label, test_data, test_len, test_label
+    return train_data, train_len, train_id, train_user_id, train_label, test_data, test_len, test_id, test_user_id, test_label
+
 
 def build_dataloader(args, **kwargs):
     """构建dataloader
@@ -227,10 +292,12 @@ def build_dataloader(args, **kwargs):
         train_loader (torch.utils.data.DataLoader): 训练集的dataloader
         test_loader (torch.utils.data.DataLoader): 测试集的dataloader
     """
-    train_data, train_len, train_label, test_data, test_len, test_label = prepare_data(
+    train_data, train_len, train_id, train_user_id, train_label, test_data, test_len, test_id, test_user_id, test_label = prepare_data(
         args, **kwargs)
-    train_set = MyDataset(args, train_data, train_label)
-    test_set = MyDataset(args, test_data, test_label)
+    train_set = MyDataset(args, train_data, train_label,
+                          **{"len": train_len, "id": train_id, "user_id": train_user_id})
+    test_set = MyDataset(args, test_data, test_label, **
+                         {"len": test_len, "id": test_id, "user_id": test_user_id})
     train_loader = DataLoader(
         train_set,
         worker_init_fn=worker_init_fn_seed,

@@ -13,13 +13,12 @@ python main.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
                 --filter_num 10 \
-                --train_ratio 0.8 \
-                --backbone lstma \
+                --vocab_dict_path pre/data/page2id-2023-01-18-12-12-23.json \
+                --max_seq_len 100 \
                 --vocab_size 10000 \
                 --embedding_dim 300 \
                 --hidden_dim 512 \
                 --lr 0.0002 \
-                --weight_decay 1e-5 \
                 --epochs 50 \
                 --batch_size 48 \
 ```
