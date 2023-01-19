@@ -39,5 +39,5 @@ class LSTMNet(nn.Module):
     def forward(self, batch_data):
         score = self.feature_extractor(batch_data) # (batch_size, 1)
         # score = self.softmax(score, dim = 1)
-        score = self.sigmoid(score)
+        # score = self.sigmoid(score)
         return score.view(-1, 1)
