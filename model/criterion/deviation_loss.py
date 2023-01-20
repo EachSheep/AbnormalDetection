@@ -19,3 +19,5 @@ class DeviationLoss(nn.Module):
         inlier_loss = torch.abs(dev)
         outlier_loss = torch.abs((confidence_margin - dev).clamp_(min=0.))
         return torch.mean((1 - y_true) * inlier_loss + y_true * outlier_loss)
+
+        # 这里的均值和方差也许可以学

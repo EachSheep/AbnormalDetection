@@ -8,6 +8,7 @@ from model.lstmnet import LSTMNet
 from model.criterion import build_criterion
 
 from sklearn.metrics import average_precision_score, roc_auc_score, recall_score, precision_score
+from sklearn.metrics import precision_recall_curve, roc_curve
 
 class Trainer(object):
 
@@ -86,6 +87,7 @@ class Trainer(object):
         roc_auc = roc_auc_score(total_target, total_pred)
         pr_auc = average_precision_score(total_target, total_pred)
         print("ROC-AUC: %.4f, PR-AUC: %.4f." % (roc_auc, pr_auc))
+
         # rscore = recall_score(total_target , total_pred)
         # pscore = precision_score(total_target, total_pred)
         # print("ROC-AUC: %.4f, PR-AUC: %.4f, RSCORE: %.4f, PSCORE: %.4f." % (roc_auc, pr_auc, rscore, pscore))

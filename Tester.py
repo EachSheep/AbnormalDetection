@@ -8,6 +8,9 @@ from model.lstmnet import LSTMNet
 from model.criterion import build_criterion
 
 from sklearn.metrics import average_precision_score, roc_auc_score, recall_score, precision_score
+from sklearn.metrics import precision_recall_curve, roc_curve
+
+import matplotlib.pyplot as plt
 
 class Tester(object):
 
@@ -35,6 +38,8 @@ class Tester(object):
         tbar = tqdm(self.test_loader, desc='\r')
         total_pred = np.array([])
         total_target = np.array([])
+
+        epoch_num = 0
         for i, sample in enumerate(tbar):
             batch_data, label = sample['data'], sample['label']
             if self.args.cuda:
@@ -49,13 +54,24 @@ class Tester(object):
             
             total_pred = np.append(total_pred, output.data.cpu().numpy())
             total_target = np.append(total_target, label.cpu().numpy())
+            epoch_num += 1
 
         roc_auc = roc_auc_score(total_target, total_pred)
         pr_auc = average_precision_score(total_target, total_pred)
         print("ROC-AUC: %.4f, PR-AUC: %.4f." % (roc_auc, pr_auc))
+
+        precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(recall, precision)
+        ax.set_xlabel('Recall')
+        ax.set_ylabel('Precision')
+        ax.set_title('PR Curve')
+        plt.savefig(os.path.join(self.args.experiment_dir, "figures", f'pr_curve-{self.args.cur_time}.png'))
+        
         # rscore = recall_score(total_target , total_pred)
         # pscore = precision_score(total_target, total_pred)
         # print("ROC-AUC: %.4f, PR-AUC: %.4f, RSCORE: %.4f, PSCORE: %.4f." % (roc_auc, pr_auc, rscore, pscore))
 
-        return roc_auc, pr_auc, test_loss
+        return roc_auc, pr_auc, test_loss / epoch_num
         # return roc_auc, pr_auc, rscore, pscore, test_loss
