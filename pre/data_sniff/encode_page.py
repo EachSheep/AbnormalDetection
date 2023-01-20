@@ -34,12 +34,15 @@ def encode_page():
     """使用feedback的用户log，给所有页面进行编码，同时获取session中最大页面的长度
     """
     feedback = tmp_prepare_data("feedback.csv")
-    feedback_page = feedback['page_name'].unique()
-    page2id = dict(zip(feedback_page, range(len(feedback_page))))
-    page2id['<eos>'] = len(feedback_page)
-    page2id['<pad>'] = len(feedback_page) + 1
-    page2id['<unk>'] = len(feedback_page) + 2  # 未知页面
-    json.dump(page2id, open(f"pre/data/page2id-{cur_time}.json", "w"))
+    feedback_page = list(feedback.groupby('page_name')['unique_id'].count().sort_values(ascending=False))
+    page2idx = dict(zip(feedback_page, range(3, len(feedback_page))))
+    page2idx['<eos>'] = 0
+    page2idx['<unk>'] = 1  # 未知页面
+    page2idx['<pad>'] = 2
+    json.dump(page2idx, open(f"pre/data/page2idx-{cur_time}.json", "w"), indent=4)
+
+    idx2page = ['<eos>', '<unk>', '<pad>'] + list(feedback_page)
+    json.dump(idx2page, open(f"pre/data/idx2page-{cur_time}.json", "w"), indent=4)
 
     session_maxlen = feedback.groupby("session_id")['unique_id'].count().max()
     print("session_maxlen:", session_maxlen)
