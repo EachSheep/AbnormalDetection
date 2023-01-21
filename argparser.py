@@ -25,7 +25,7 @@ parser.add_argument('--file_name_abnormal', type=str, default='feedback.csv',
                     help="anomaly file name")  # 异常数据文件名，也就是feedback用户的行为轨迹
 parser.add_argument('--file_name_normal', type=str, default='normal.csv',
                     help="normal file name")  # 正常数据文件名，也就是normal用户的行为轨迹
-parser.add_argument('--vocab_dict_path', type=str, default='pre/data/page2id-2023-01-18-12-12-23.json',
+parser.add_argument('--vocab_dict_path', type=str, default='pre/data/page2idx-2023-01-20-21-57-52.json',
                     help="vocab dict path")  # 页面->id的字典存放路径
 parser.add_argument('--max_seq_len', type=int, default=100,
                     help="vocab dict path")  # 页面->id的字典存放路径
@@ -73,6 +73,6 @@ parser.add_argument("--steps_per_epoch", type=int, default=20, # 一个epoch中�
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
-cur_time = '2023-01-18-12-12-23'
+cur_time = '2023-01-20-21-57-52'
 args.weight_name = args.weight_name.format(cur_time)
 args.cur_time = cur_time

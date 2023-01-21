@@ -26,12 +26,12 @@ class Tester(object):
            self.model = self.model.cuda()
            self.criterion = self.criterion.cuda()
     
-    def load_state_dict(self, state_dict_path):
-        self.model.load_state_dict(torch.load(state_dict_path))
-
-    def eval(self):
+    def eval(self, state_dict_path : str):
         """测试所有测试集
+        Args:
+            state_dict_path (str): 模型参数路径
         """
+        self.model.load_state_dict(torch.load(state_dict_path))
         self.model.eval()
         
         test_loss = 0.0
@@ -58,7 +58,7 @@ class Tester(object):
 
         roc_auc = roc_auc_score(total_target, total_pred)
         pr_auc = average_precision_score(total_target, total_pred)
-        print("ROC-AUC: %.4f, PR-AUC: %.4f." % (roc_auc, pr_auc))
+        # print("ROC-AUC: %.4f, PR-AUC: %.4f." % (roc_auc, pr_auc))
 
         precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
         fig = plt.figure()
@@ -67,7 +67,7 @@ class Tester(object):
         ax.set_xlabel('Recall')
         ax.set_ylabel('Precision')
         ax.set_title('PR Curve')
-        plt.savefig(os.path.join(self.args.experiment_dir, "figures", f'pr_curve-{self.args.cur_time}.png'))
+        plt.savefig(os.path.join(self.args.experiment_dir, "figures", f'pr_curve-{self.args.cur_time}.png'), bbox_inches='tight')
         
         # rscore = recall_score(total_target , total_pred)
         # pscore = precision_score(total_target, total_pred)

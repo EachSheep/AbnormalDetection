@@ -15,7 +15,7 @@ python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
                 --filter_num 10 \
-                --vocab_dict_path pre/data/page2id-2023-01-18-12-12-23.json \
+                --vocab_dict_path pre/data/page2idx-2023-01-20-21-57-52.json \
                 --max_seq_len 100 \
                 --vocab_size 10000 \
                 --embedding_dim 300 \
@@ -32,7 +32,7 @@ python test.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
                 --filter_num 10 \
-                --vocab_dict_path pre/data/page2id-2023-01-18-12-12-23.json \
+                --vocab_dict_path pre/data/page2idx-2023-01-20-21-57-52.json \
                 --max_seq_len 100
 ```
 

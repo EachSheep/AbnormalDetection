@@ -13,6 +13,7 @@ cur_abs_working_directory = os.path.abspath(
     "/home/{}/Source/deviation-network-fliggy/".format(cur_login_user))  # 设置当前项目的工作目录
 os.chdir(cur_abs_working_directory)
 print("current working directory:", os.getcwd())
+cur_time = '2023-01-20-21-57-52'
 
 sys.path.append("./")
 
@@ -34,14 +35,16 @@ def encode_page():
     """使用feedback的用户log，给所有页面进行编码，同时获取session中最大页面的长度
     """
     feedback = tmp_prepare_data("feedback.csv")
-    feedback_page = list(feedback.groupby('page_name')['unique_id'].count().sort_values(ascending=False))
-    page2idx = dict(zip(feedback_page, range(3, len(feedback_page))))
-    page2idx['<eos>'] = 0
-    page2idx['<unk>'] = 1  # 未知页面
-    page2idx['<pad>'] = 2
+    feedback_page = list(feedback.groupby('page_name')['unique_id'].count().sort_values(ascending=False).index)
+    page2idx = {
+        '<eos>' : 0,
+        '<unk>' : 1,  # 未知页面
+        '<pad>' : 2
+    }
+    page2idx.update(dict(zip(feedback_page, range(3, len(feedback_page)))))
     json.dump(page2idx, open(f"pre/data/page2idx-{cur_time}.json", "w"), indent=4)
 
-    idx2page = ['<eos>', '<unk>', '<pad>'] + list(feedback_page)
+    idx2page = dict(zip(['<eos>', '<unk>', '<pad>'] + list(feedback_page), range(len(feedback_page) + 3)))
     json.dump(idx2page, open(f"pre/data/idx2page-{cur_time}.json", "w"), indent=4)
 
     session_maxlen = feedback.groupby("session_id")['unique_id'].count().max()

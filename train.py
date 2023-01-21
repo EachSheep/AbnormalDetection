@@ -14,7 +14,11 @@ if __name__ == '__main__':
     if not os.path.exists(args.experiment_dir):
         os.makedirs(args.experiment_dir)
 
-    setting_path = os.path.join(args.experiment_dir, 'jsons', f'train_setting-{args.cur_time}.json')
+    seting_dir = os.path.join(args.experiment_dir, 'jsons')
+    if not os.path.exists(seting_dir):
+        os.makedirs(seting_dir)
+    setting_path = os.path.join(seting_dir, f'train_setting-{args.cur_time}.json')
+    
     json.dump(args.__dict__, open(setting_path, 'w'), indent=4)
 
     trainer = Trainer(args)

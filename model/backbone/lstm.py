@@ -109,6 +109,7 @@ class LSTM_with_Attention(nn.Module):
         self.rnn = nn.LSTM(
             embedding_dim,
             hidden_dim,
+            num_layers=n_layers,
             bidirectional=use_bidirectional,
             dropout=0.5 if use_dropout else 0.
         )
