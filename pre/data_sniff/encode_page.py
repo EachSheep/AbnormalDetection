@@ -32,23 +32,24 @@ def tmp_prepare_data(file_name: str):
     return df
 
 def encode_page():
-    """使用feedback的用户log，给所有页面进行编码，同时获取session中最大页面的长度
+    """使用feedback和normal的用户log，给所有页面进行编码，同时获取session中最大页面的长度，使用一周的数据
     """
+    normal = tmp_prepare_data("normal.csv")
     feedback = tmp_prepare_data("feedback.csv")
-    feedback_page = list(feedback.groupby('page_name')['unique_id'].count().sort_values(ascending=False).index)
+    all = pd.concat([normal, feedback], axis=0).drop(columns=['unique_id']).reset_index(drop=True).reset_index().rename(columns={"index": "unique_id"})
+
+    all_page = list(all.groupby('page_name')['unique_id'].count().sort_values(ascending=False).index)
+
     page2idx = {
         '<eos>' : 0,
         '<unk>' : 1,  # 未知页面
         '<pad>' : 2
     }
-    page2idx.update(dict(zip(feedback_page, range(3, len(feedback_page)))))
+    page2idx.update(dict(zip(all_page, range(3, len(all_page)))))
     json.dump(page2idx, open(f"pre/data/page2idx-{cur_time}.json", "w"), indent=4)
 
-    idx2page = dict(zip(['<eos>', '<unk>', '<pad>'] + list(feedback_page), range(len(feedback_page) + 3)))
+    idx2page = dict(zip(['<eos>', '<unk>', '<pad>'] + list(all_page), range(len(all_page) + 3)))
     json.dump(idx2page, open(f"pre/data/idx2page-{cur_time}.json", "w"), indent=4)
-
-    session_maxlen = feedback.groupby("session_id")['unique_id'].count().max()
-    print("session_maxlen:", session_maxlen)
 
 if __name__ == "__main__":
     encode_page()

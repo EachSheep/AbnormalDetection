@@ -6,6 +6,7 @@ import pandas as pd
 import argparse
 import time
 import sys
+import json
 
 cur_login_user = os.getlogin()
 cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
@@ -26,26 +27,29 @@ args = parser.parse_args()
 def tmp_prepare_data(file_name: str):
     normal_data_path = os.path.join(args.infile_directory, file_name)
     df = pd.read_csv(normal_data_path)
-    df["date_time"] = pd.to_datetime(df.date_time)
+    df["date_time"] = pd.to_datetime(df["date_time"])
     df = df.reset_index()
     df.rename(columns={"index": "unique_id"}, inplace=True)
 
     return df
 
 def draw_session_pagenum():
-    """绘制每个session的页面数目的分布
+    """绘制每个session的页面数目的分布，使用一周的数据
     """
     normal = tmp_prepare_data("normal.csv")
-    normal_cnt = normal.groupby("session_id")['unique_id'].count()
-
     feedback = tmp_prepare_data("feedback.csv")
+    all = pd.concat([normal, feedback], axis=0).drop(columns=['unique_id']).reset_index(drop=True).reset_index().rename(columns={"index": "unique_id"})
+
+    normal_cnt = normal.groupby("session_id")['unique_id'].count()
     feedback_cnt = feedback.groupby("session_id")['unique_id'].count()
+    all_cnt = all.groupby("session_id")['unique_id'].count()
 
     drawer = MyDrawer.MyDrawer()
 
     cdfvalues_list = [
         normal_cnt.values,
-        feedback_cnt.values
+        feedback_cnt.values,
+        all_cnt.values,
     ]
 
     fig = plt.figure()
@@ -55,29 +59,73 @@ def draw_session_pagenum():
         fig_type="frequency",
         xlabel="Percentage of Session",
         ylabel="CDF",
-        color_list=['red', 'blue', 'green', 'purple'],
+        color_list=['red', 'blue', 'purple'],
         marker_list=['x', 'x', 'x', 'x'],
-        legend_label_list=['normal', 'feedback'],
+        legend_label_list=['normal', 'feedback', 'all'],
         percentagey=True,
         reverse=False,
+        xscale="log",
         fig=fig,
         ax=ax
     )
     ax.grid(True)
     plt.savefig(
         "pre/figures/sessionnum_frequency-{}.png".format(cur_time), bbox_inches='tight')
-    
-    # 看一下feedback数据里的user有多少，确定一下有多少user是有log的，只是为了确认一下
-    feedback_user_num = feedback["user_id"].unique()
-    print("feedback_user_num:", len(feedback_user_num))
+    json.dump(list(normal_cnt.values), open("pre/figures/normal_cnt-{}.json".format(cur_time), "w")) # session中的页面长度
+    json.dump(list(feedback_cnt.values), open("pre/figures/feedback_cnt-{}.json".format(cur_time), "w")) # session中的页面长度
+    json.dump(list(all_cnt.values), open("pre/figures/all_cnt-{}.json".format(cur_time), "w")) # session中的页面长度
 
-    # 统计一下不同的页面的个数
-    normal_page_num = normal["page_name"].unique()
-    feedback_page_num = feedback["page_name"].unique()
-    merged_page_num = list(set(normal_page_num) | set(feedback_page_num))
-    print("normal_page_num:", len(normal_page_num))
-    print("feedback_page_num:", len(feedback_page_num))
-    print("merged_page_num:", len(merged_page_num))
+    def tmp_function(normal, feedback):
+        """做一些简单的数据统计
+        """
+        # session num
+        normal_session_num = normal["session_id"].unique()
+        print("normal_session_num:", len(normal_session_num))
+        feedback_session_num = feedback["session_id"].unique()
+        print("feedback_session_num:", len(feedback_session_num))
+        merged_session_num = list(set(normal_session_num) | set(feedback_session_num))
+        print("merged_session_num:", len(merged_session_num))
+
+        # 看一下nomral数据里的user有多少, 看一下feedback数据里的user有多少，确定一下有多少user是有log的
+        normal_user_num = normal["user_id"].unique()
+        print("normal_user_num:", len(normal_user_num))
+        feedback_user_num = feedback["user_id"].unique()
+        print("feedback_user_num:", len(feedback_user_num))
+        merged_user_num = list(set(normal_user_num) | set(feedback_user_num))
+        print("merged_user_num:", len(merged_user_num))
+
+        # 统计一下不同的页面的个数
+        normal_page_num = normal["page_name"].unique()
+        print("normal_page_num:", len(normal_page_num))
+        feedback_page_num = feedback["page_name"].unique()
+        print("feedback_page_num:", len(feedback_page_num))
+        merged_page_num = list(set(normal_page_num) | set(feedback_page_num))
+        print("merged_page_num:", len(merged_page_num))
+
+        # 统计一下页面的个数
+        print("normal_page_num:", len(normal))
+        print("feedback_page_num:", len(feedback))
+        print("merged_page_num:", len(normal) + len(feedback))
+
+    normal['date'] = normal['date_time'].dt.date
+    feedback['date'] = feedback['date_time'].dt.date
+    tmp_function(normal, feedback)
+
+    # 第一天
+    normal_first = normal[normal['date'] == pd.to_datetime('2023-01-02')]
+    feedback_first = feedback[feedback['date'] == pd.to_datetime('2023-01-02')]
+    tmp_function(normal_first, feedback_first)
+
+    # 前六天
+    normal_six = normal[normal['date'] != pd.to_datetime('2023-01-08')]
+    feedback_six = feedback[feedback['date'] != pd.to_datetime('2023-01-08')]
+    tmp_function(normal_six, feedback_six)
+
+    # 第七天
+    normal_seventh = normal[normal['date'] == pd.to_datetime('2023-01-08')]
+    feedback_seventh = feedback[feedback['date'] == pd.to_datetime('2023-01-08')]
+    tmp_function(normal_seventh, feedback_seventh)
+
 
 if __name__ == "__main__":
     draw_session_pagenum()
