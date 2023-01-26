@@ -45,7 +45,7 @@ def encode_page():
         '<unk>' : 1,  # 未知页面
         '<pad>' : 2
     }
-    page2idx.update(dict(zip(all_page, range(3, len(all_page)))))
+    page2idx.update(dict(zip(all_page, range(3, len(all_page) + 3))))
     json.dump(page2idx, open(f"pre/data/page2idx-{cur_time}.json", "w"), indent=4)
 
     idx2page = dict(zip(['<eos>', '<unk>', '<pad>'] + list(all_page), range(len(all_page) + 3)))
