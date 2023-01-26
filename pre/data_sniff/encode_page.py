@@ -48,7 +48,7 @@ def encode_page():
     page2idx.update(dict(zip(all_page, range(3, len(all_page) + 3))))
     json.dump(page2idx, open(f"pre/data/page2idx-{cur_time}.json", "w"), indent=4)
 
-    idx2page = dict(zip(['<eos>', '<unk>', '<pad>'] + list(all_page), range(len(all_page) + 3)))
+    idx2page = dict(range(len(all_page) + 3), zip(['<eos>', '<unk>', '<pad>'] + list(all_page)))
     json.dump(idx2page, open(f"pre/data/idx2page-{cur_time}.json", "w"), indent=4)
 
 if __name__ == "__main__":
