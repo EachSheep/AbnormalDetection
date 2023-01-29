@@ -35,21 +35,27 @@ def tmp_prepare_data(file_name: str):
 
 def draw_session_pagenum():
     """绘制每个session的页面数目的分布，使用一周的数据
+    注意：下面的代码只对每次读取一天的数据有意义，如果读取多天的数据，需要修改代码
     """
     normal = tmp_prepare_data("normal.csv")
     feedback = tmp_prepare_data("feedback.csv")
-    all = pd.concat([normal, feedback], axis=0).drop(columns=['unique_id']).reset_index(drop=True).reset_index().rename(columns={"index": "unique_id"})
+    # all = pd.concat([normal, feedback], axis=0).drop(columns=['unique_id']).reset_index(drop=True).reset_index().rename(columns={"index": "unique_id"})
+
+    # 去除normal中session_id的交集
+    normal = normal[~normal["session_id"].isin(feedback["session_id"].unique())]
+    # 去除feedback中session_id的交集
+    feedback = feedback[~feedback["session_id"].isin(normal["session_id"].unique())]
 
     normal_cnt = normal.groupby("session_id")['unique_id'].count()
     feedback_cnt = feedback.groupby("session_id")['unique_id'].count()
-    all_cnt = all.groupby("session_id")['unique_id'].count()
+    # all_cnt = all.groupby("session_id")['unique_id'].count()
 
     drawer = MyDrawer.MyDrawer()
 
     cdfvalues_list = [
         normal_cnt.values,
         feedback_cnt.values,
-        all_cnt.values,
+        # all_cnt.values,
     ]
 
     fig = plt.figure()
@@ -57,7 +63,7 @@ def draw_session_pagenum():
     drawer.drawMergeCDF(
         cdfvalues_list,
         fig_type="frequency",
-        xlabel="Percentage of Session",
+        xlabel="# of Pages of Session",
         ylabel="CDF",
         color_list=['red', 'blue', 'purple'],
         marker_list=['x', 'x', 'x', 'x'],
@@ -73,7 +79,7 @@ def draw_session_pagenum():
         "pre/figures/sessionnum_frequency-{}.png".format(cur_time), bbox_inches='tight')
     json.dump(list(normal_cnt.values), open("pre/figures/normal_cnt-{}.json".format(cur_time), "w")) # session中的页面长度
     json.dump(list(feedback_cnt.values), open("pre/figures/feedback_cnt-{}.json".format(cur_time), "w")) # session中的页面长度
-    json.dump(list(all_cnt.values), open("pre/figures/all_cnt-{}.json".format(cur_time), "w")) # session中的页面长度
+    # json.dump(list(all_cnt.values), open("pre/figures/all_cnt-{}.json".format(cur_time), "w")) # session中的页面长度
 
     def tmp_function(normal, feedback):
         """做一些简单的数据统计
@@ -116,15 +122,15 @@ def draw_session_pagenum():
     feedback_first = feedback[feedback['date'] == pd.to_datetime('2023-01-02')]
     tmp_function(normal_first, feedback_first)
 
-    # 前六天
-    normal_six = normal[normal['date'] != pd.to_datetime('2023-01-08')]
-    feedback_six = feedback[feedback['date'] != pd.to_datetime('2023-01-08')]
-    tmp_function(normal_six, feedback_six)
+    # # 前六天
+    # normal_six = normal[normal['date'] != pd.to_datetime('2023-01-08')]
+    # feedback_six = feedback[feedback['date'] != pd.to_datetime('2023-01-08')]
+    # tmp_function(normal_six, feedback_six)
 
-    # 第七天
-    normal_seventh = normal[normal['date'] == pd.to_datetime('2023-01-08')]
-    feedback_seventh = feedback[feedback['date'] == pd.to_datetime('2023-01-08')]
-    tmp_function(normal_seventh, feedback_seventh)
+    # # 第七天
+    # normal_seventh = normal[normal['date'] == pd.to_datetime('2023-01-08')]
+    # feedback_seventh = feedback[feedback['date'] == pd.to_datetime('2023-01-08')]
+    # tmp_function(normal_seventh, feedback_seventh)
 
 
 if __name__ == "__main__":
