@@ -38,7 +38,11 @@ def encode_page():
     feedback = tmp_prepare_data("feedback.csv")
     all = pd.concat([normal, feedback], axis=0).drop(columns=['unique_id']).reset_index(drop=True).reset_index().rename(columns={"index": "unique_id"})
 
-    all_page = list(all.groupby('page_name')['unique_id'].count().sort_values(ascending=False).index)
+    all_page_num = all.groupby('page_name')['unique_id'].count().sort_values(ascending=False)
+    page2num = dict(zip(all_page_num.index, [int(value) for value in all_page_num.values]))
+    json.dump(page2num, open(f"pre/data/page2num-{cur_time}.json", "w"), indent=4)
+
+    all_page = list(all_page_num.index)
 
     page2idx = {
         '<eos>' : 0,
@@ -48,7 +52,7 @@ def encode_page():
     page2idx.update(dict(zip(all_page, range(3, len(all_page) + 3))))
     json.dump(page2idx, open(f"pre/data/page2idx-{cur_time}.json", "w"), indent=4)
 
-    idx2page = dict(range(len(all_page) + 3), zip(['<eos>', '<unk>', '<pad>'] + list(all_page)))
+    idx2page = dict(zip(range(len(all_page) + 3), ['<eos>', '<unk>', '<pad>'] + list(all_page)))
     json.dump(idx2page, open(f"pre/data/idx2page-{cur_time}.json", "w"), indent=4)
 
 if __name__ == "__main__":
