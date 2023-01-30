@@ -1,183 +1,184 @@
-"""设置一系列规则对页面进行清洗
-生成字典时候的清洗
-跑模型时候的清洗
-"""
 import json
 import re
 import numpy as np
 import os
 
-
-def preprocess(url):
-    """预处理，生成字典时候和跑模型时候都要用到
+def filter_by_ifurl1(safe_list, safe_num, url_list, url_num):
+    """根据是否是url过滤
     Args:
-        url (str): 待处理的url
+        safe_list (list): 安全的url
+        safe_num (list): 安全的url对应的访问次数
+        url_list (list): 待过滤的url
+        url_num (list): 待过滤的url对应的访问次数
     Returns:
-        url (str): 处理后的url
-    # 筛除局域网内广播信息
-    # index_list = [True if not re.match(r'^https?:\/\/(192\.168|10|172\.1[6-9]|172\.2[0-9]|172\.3[0-1])\.', url) else False for url in url_list]
+        safe_list (list): 安全的url
+        safe_num (list): 安全的url对应的访问次数
+        url_list (list): 待过滤的url
+        url_num (list): 待过滤的url对应的访问次数
     """
-    url = url.lower()  # 大写变小写
-    # 去除url中的汉字, 去除所有的url中文编码, 去除所有逗号, 去除所有~
-    url = re.sub(r'[\u4e00-\u9fa5]|%[a-f\d]{2}|~|,', '', url)
-    url = re.sub(r'/+$', '', url)  # 末尾不能以/结尾
 
-    # "https://m.amap.com/navigation/carmap/&saddr=121.834638%2c29.847424%2c%e6%88%91%e7%9a%84%e4%bd%8d%e7%bd%ae&daddr=121.51234007%2c29.84995423%2c%e5%ae%81%e6%b3%a2%e5%ae%a2%e8%bf%90%e4%b8%ad%e5%bf%83%e5%9c%b0%e9%93%81%e7%ab%99c%e5%8f%a3"
-    # 类似这样的url变成：https://m.amap.com/navigation/carmap/&saddr=daddr=
-    if '=' in url:  # =到下一个&，或者=到最后的字符去除
-        url = re.sub(r'=.*&|=.*$', '=', url)
-    if len(url) > 0 and url[-1] == '=':
-        url = url[:-1]
-    return url
+    # 非url的加入safe_list
+    remove_index = []
+    for i, url in enumerate(url_list):
+        if not re.match(r'^https?:\/\/', url):
+            safe_list.append(url)
+            safe_num.append(url_num[i])
+            remove_index.append(False)
+        else:
+            remove_index.append(True)
+    url_list = np.array(url_list)[np.array(remove_index) == True].tolist()
+    url_num = np.array(url_num)[np.array(remove_index) == True].tolist()
+    return safe_list, safe_num, url_list, url_num
 
 
-def merge_url(url_list, url_num):
-    """合并url
+def filter_by_extension1(safe_list, safe_num, url_list, url_num):
+    """根据拓展名过滤url
     Args:
-        url_list (list): 待合并的url列表
-        url_num (list): 合并后的url数量
-    Returns:
-        url_list (list): 合并后的url列表
-        url_num (list): 合并后的url数量
-    """
-    tmp = {}
-    for i in range(len(url_list)):
-        tmp[url_list[i]] = tmp.get(url_list[i], 0) + url_num[i]
-    return list(tmp.keys()), list(tmp.values())
-
-
-def filter_by_ifurl(url):
-    """根据是否是url过滤, 生成字典时候要用到
-    Args:
-        url (str): 待过滤的url
-    Returns:
-        filter_or_not (bool) : 是否被过滤掉，是为True, 否为False
-    """
-    if re.match(r'^https?:\/\/', url):
-        return False
-    else:
-        return True
-
-extension_of_filename = set([extension.lower() for extension in json.load(
-    open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets/extension_of_filename.json'), 'r'))])  # 以各种拓展名结尾的
-
-
-def filter_by_extension(url):
-    """根据拓展名过滤url, 生成字典时候要用到
-    Args:
-        url (str): 待过滤的url
-    Returns:
-        filter_or_not (bool) : 是否被过滤掉，是为True, 否为False
-    """
-    # extension_in_url = url.split('.')[-1]
-    extension_in_url = re.search(r'[^a-zA-Z0-9]([a-zA-Z0-9_]+)$', url)
-    if extension_in_url and extension_in_url.group()[1:] in extension_of_filename:
-        return True
-    else:
-        return False
-
-
-# safe_dict: 一定是关键词的词典
-if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/')):
-    os.makedirs(os.path.join(os.path.dirname(__file__), 'assets/'))
-if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/safe_dict.json')):
-    with open(os.path.join(os.path.dirname(__file__), 'assets/safe_dict.json'), 'w') as f:
-        json.dump({}, f)
-safe_dict = json.load(open(os.path.join(os.path.dirname(__file__), 'assets/safe_dict.json'), 'r'))  # 读取safe_dict
-safe_dict = [word.lower() for word in safe_dict]
-
-
-def filter_by_dict(url):
-    """根据词典过滤url，以词典中的词结尾的url为安全url，生成字典时候要用到
-    Args:
-        url (str): 待过滤的url
-    Returns:
-        filter_or_not (bool) : 是否被过滤掉，是为True, 否为False
-    """
-    # 末尾必须是非字母数字
-    url_lastword = re.search(r'[^a-zA-Z0-9]([a-zA-Z0-9_]+)$', url)
-    if url_lastword and url_lastword.group()[1:] in safe_dict:
-        return True
-    else:
-        return False
-
-
-def filter_by_cnt(url_num):
-    """根据url出现次数过滤
-    Args:
-        url_num (int): 待过滤的url对应的出现次数
-    Returns:
-        filter_or_not (bool) : 是否被过滤掉，是为True, 否为False
-    """
-    if url_num >= 10:
-        return True
-    else:
-        return False
-
-
-def filter_by_url(url):
-    """过滤url
-    Args:
-        url (str): 待过滤的url
-    Returns:
-        filter_or_not (bool) : 是否被过滤掉，是为True, 否为False
-    """
-    return filter_by_ifurl(url) or filter_by_extension(url) or filter_by_dict(url)
-
-
-def filter_by_urlcnt(cnt):
-    """过滤url
-    Args:
-        cnt (int): 待过滤的url对应的出现次数
-    Returns:
-        filter_or_not (bool) : 是否被过滤掉，是为True, 否为False
-    """
-    return filter_by_cnt(cnt)
-
-
-def filter_by_lastword_frequency(url_list, url_num):
-    """按照url最后一个/后面的词的频率过滤url，同时更新freq_dict
-    freq_dict: 自动根据当天的频率生成的词典，最多保留10000条，超了过后，旧的词会被删除
-
-    Args:
+        safe_list (list): 安全的url
+        safe_num (list): 安全的url的出现次数
         url_list (list): 待过滤的url
         url_num (list): 待过滤的url的出现次数
     Returns:
-        safe_list (list): 安全的url的索引
+        safe_list (list): 安全的url
+        safe_num (list): 安全的url的出现次数
+        url_list (list): 待过滤的url
+        url_num (list): 待过滤的url的出现次数
     """
-    if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/')):
-        os.makedirs(os.path.join(os.path.dirname(__file__), 'assets/'))
+    extensions = set([extension.lower() for extension in json.load(
+        open('pre/assets/extension_of_filename.json', 'r'))])  # 以各种拓展名结尾的
+
+    index_list = np.array(
+        [True if url.split('.')[-1] in extensions else False for url in url_list])
+    
+    safe_list.extend(np.array(url_list)[index_list].tolist())
+    safe_num.extend(np.array(url_num)[index_list].tolist())
+    url_list = np.array(url_list)[index_list == False].tolist()
+    url_num = np.array(url_num)[index_list == False].tolist()
+    return safe_list, safe_num, url_list, url_num
+
+
+def filter_by_equal1(safe_list, safe_num, url_list, url_num):
+    """根据=过滤url
+    Args:
+        safe_list (list): 安全的url
+        safe_num (list): 安全的url的出现次数
+        url_list (list): 待过滤的url
+        url_num (list): 待过滤的url的出现次数
+    Returns:
+        safe_list (list): 安全的url
+        safe_num (list): 安全的url的出现次数
+        url_list (list): 待过滤的url
+        url_num (list): 待过滤的url的出现次数
+    """
+    index_list = np.array([True if '=' in url else False for url in url_list])
+    tmp_list = np.array(url_list)[index_list].tolist()
+    tmp_num = np.array(url_num)[index_list].tolist()
+    url_list = np.array(url_list)[index_list == False].tolist()
+    url_num = np.array(url_num)[index_list == False].tolist()
+
+    tmp = {}
+    for i in range(len(tmp_list)):
+        tmp[tmp_list[i]] = tmp.get(tmp_list[i], 0) + tmp_num[i]
+    safe_list.extend(tmp.keys())
+    safe_num.extend(tmp.values())
+
+    return safe_list, safe_num, url_list, url_num
+
+
+def filter_by_dict1(safe_list, safe_num, url_list, url_num):
+    """根据词典过滤url，以词典中的词结尾的url为安全url
+    safe_dict: 认为加入的，一定是关键词的词典
+    freq_dict: 自动根据当天的频率生成的词典，最多保留10000条，超了过后，旧的词会被删除
+
+    Args:
+        safe_list (list): 安全的url
+        safe_num (list): 安全的url的出现次数
+        url_list (list): 待过滤的url
+        url_num (list): 待过滤的url的出现次数
+    Returns:
+        safe_list (list): 安全的url
+        safe_num (list): 安全的url的出现次数
+        url_list (list): 待过滤的url
+        url_num (list): 待过滤的url的出现次数
+    """
+    if not os.path.exists('pre/assets/'):
+        os.makedirs('pre/assets/')
+    if not os.path.exists('pre/assets/safe_dict.json'):
+        with open('pre/assets/safe_dict.json', 'w') as f:
+            json.dump({}, f)
     if not os.path.exists('pre/assets/freq_dict.json'):
-        with open(os.path.join(os.path.dirname(__file__), 'assets/freq_dict.json'), 'w') as f:
+        with open('pre/assets/freq_dict.json', 'w') as f:
             json.dump({}, f)
 
-    url_lastword_list = [
-        re.search(r'[^a-zA-Z0-9]([a-zA-Z0-9_]+)$', url).group()[1:]
-        if re.search(r'[^a-zA-Z0-9]([a-zA-Z0-9_]+)$', url) else url
-        for url in url_list
-    ]  # 按照最后一个词的频率生成词典
-    url_lastword = {}  # 统计最后一个词的频率
+    url_lastword_list = [url.split('/')[-1]
+                         for url in url_list]  # 按照最后一个词的频率生成词典
+    url_lastdict = {}
     for i, word in enumerate(url_lastword_list):
-        url_lastword[word] = url_lastword.get(word, 0) + url_num[i]
-    url_lastword = sorted(url_lastword.items(),
+        url_lastdict[word] = url_lastdict.get(word, 0) + url_num[i]
+    url_lastword = sorted(url_lastdict.items(),
                           key=lambda x: x[1], reverse=True)
-    url_dict = [word[0]
-                for word in url_lastword if word[1] >= 10]  # 筛选出出现次数多的词
+    # 筛选出出现次数大于等于5的词
+    url_dict = [word[0] for word in url_lastword if word[1] >= 5]
 
+    # 读取safe_dict
+    safe_dict = json.load(open('pre/assets/safe_dict.json', 'r'))
+    safe_dict = [word.lower() for word in safe_dict]
+    safe_dict = sorted(set(safe_dict))
+    json.dump(safe_dict, open('pre/assets/safe_dict.json', 'w'),
+              indent=4)  # 更新词典至文件
     # 读取freq_dict
-    freq_dict = json.load(open(os.path.join(os.path.dirname(__file__), 'assets/freq_dict.json'), 'r'))
+    freq_dict = json.load(open('pre/assets/freq_dict.json', 'r'))
     freq_dict = [word.lower() for word in freq_dict]
+    freq_dict = sorted(set(freq_dict) - set(safe_dict),
+                       key=freq_dict.index)  # 稳定去重
+    url_dict = sorted(set(url_dict) - set(safe_dict),
+                      key=url_dict.index)  # 稳定去重
     freq_dict = freq_dict + url_dict
     freq_dict = sorted(set(freq_dict), key=freq_dict.index)  # 稳定去重
     if len(freq_dict) > 10000:
         freq_dict = freq_dict[-10000:]
-    json.dump(freq_dict, open(os.path.join(os.path.dirname(__file__), 'assets/freq_dict.json'), 'w'),
+    json.dump(freq_dict, open('pre/assets/freq_dict.json', 'w'),
               indent=4)  # 更新词典至文件
 
-    index_list = np.array(  # 以词典中的词结尾的url为安全url
-        [True if word in freq_dict else False for word in url_lastword_list])
+    # 合并词典
+    safe_dict.extend(freq_dict)
+    safe_dict = list(set(safe_dict))
 
-    return index_list
+    safe_dict = set(safe_dict)
+    # 以词典中的词结尾的url为安全url
+    index_list = np.array(
+        [True if word in safe_dict else False for word in url_lastword_list])
+    safe_list.extend(np.array(url_list)[index_list].tolist())
+    safe_num.extend(np.array(url_num)[index_list].tolist())
+    url_list = np.array(url_list)[index_list == False].tolist()
+    url_num = np.array(url_num)[index_list == False].tolist()
+    return safe_list, safe_num, url_list, url_num
+
+def filter_by_cnt1(safe_list, safe_num, url_list, url_num):
+    """根据出现次数过滤
+    Args:
+        safe_list (list): 安全的url
+        safe_num (list): 安全的url对应的访问次数
+        url_list (list): 待过滤的url
+        url_num (list): 待过滤的url对应的访问次数
+    Returns:
+        safe_list (list): 安全的url
+        safe_num (list): 安全的url对应的访问次数
+        url_list (list): 待过滤的url
+        url_num (list): 待过滤的url对应的访问次数
+    """
+    # 出现次数大于10的加入safe_list
+    remove_index = []
+    for i, url in enumerate(url_list):
+        if url_num[i] > 10:
+            safe_list.append(url)
+            safe_num.append(url_num[i])
+            remove_index.append(False)
+        else:
+            remove_index.append(True)
+    url_list = np.array(url_list)[np.array(remove_index) == True].tolist()
+    url_num = np.array(url_num)[np.array(remove_index) == True].tolist()
+    return safe_list, safe_num, url_list, url_num
 
 
 def filter_by_special(safe_list, safe_num, url_list, url_num):
@@ -499,3 +500,10 @@ def filter_by_special(safe_list, safe_num, url_list, url_num):
     # safe_num.extend(tmp.values())
 
     return safe_list, safe_num, url_list, url_num
+
+if __name__ == "__main__":
+    safe_list, safe_num, url_list, url_num = filter_by_ifurl1(safe_list, safe_num, url_list, url_num)
+    safe_list, safe_num, url_list, url_num = filter_by_extension1(safe_list, safe_num, url_list, url_num) # 通用的清洗
+    safe_list, safe_num, url_list, url_num = filter_by_equal1(safe_list, safe_num, url_list, url_num) # 通用的清洗
+    safe_list, safe_num, url_list, url_num = filter_by_dict1(safe_list, safe_num, url_list, url_num) # 通用的清洗
+    safe_list, safe_num, url_list, url_num = filter_by_cnt1(safe_list, safe_num, url_list, url_num) # 这个操作放后面，cnt清洗可能出错

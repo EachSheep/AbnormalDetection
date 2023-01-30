@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 
 from dataloaders.MyDataset import MyDataset
 from dataloaders.utlis import worker_init_fn_seed, BalancedBatchSampler, RandomedBatchSampler
+from pre.wash_pagename import *
 
 
 def prepare_normal_data(args, **kwargs):
@@ -30,13 +31,28 @@ def prepare_normal_data(args, **kwargs):
     page2id = json.load(open(args.vocab_dict_path, 'r'))
     max_seq_len = args.max_seq_len + 1  # +1是<eos>的位置
 
-    normal_data_path = os.path.join(args.dataset_root, args.file_name_normal)
+    normal_data_path = os.path.join(args.dataset_root, args.file_name_normal) # 载入数据
     df_normal = pd.read_csv(normal_data_path)
     df_normal["date_time"] = pd.to_datetime(df_normal.date_time)
     df_normal = df_normal.reset_index()
     df_normal.rename(columns={"index": "unique_id"}, inplace=True)
     print('正常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_normal))
 
+
+    # 首先去掉和feedback数据交叉的部分，这部分是，特殊代码，不通用
+    abnormal_data_path = os.path.join(
+        args.dataset_root, args.file_name_abnormal)
+    df_abnormal = pd.read_csv(abnormal_data_path)
+    df_abnormal["date_time"] = pd.to_datetime(df_abnormal.date_time)
+    df_abnormal = df_abnormal.reset_index()
+    df_abnormal.rename(columns={"index": "unique_id"}, inplace=True)
+    print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))
+    # 去除normal中session_id的交集
+    df_normal = df_normal[~df_normal["session_id"].isin(df_abnormal["session_id"].unique())]
+
+    # 然后对数据中的page_name进行清洗
+    df_normal['page_name'] = df_normal['page_name'].map(preprocess)
+    
     # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。
     df_normal_cnt = df_normal.groupby("session_id")['unique_id'].count()
     df_normal_larger_id = df_normal_cnt[df_normal_cnt >= args.filter_num]
@@ -122,6 +138,9 @@ def prepare_abnormal_data(args, **kwargs):
     df_abnormal = df_abnormal.reset_index()
     df_abnormal.rename(columns={"index": "unique_id"}, inplace=True)
     print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))
+
+    # 然后对数据中的page_name进行清洗
+    df_abnormal['page_name'] = df_abnormal['page_name'].map(preprocess)
 
     # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。
     df_abnormal_cnt = df_abnormal.groupby("session_id")['unique_id'].count()
@@ -215,9 +234,9 @@ def prepare_train_data(args, **kwargs):
     if not os.path.exists(os.path.join(args.experiment_dir, 'jsons')):
         os.makedirs(os.path.join(args.experiment_dir, 'jsons'))
     json.dump(unknown_page_name, open(os.path.join(args.experiment_dir,
-              'jsons', f'unknown_page_name-train-{args.cur_time}.json'), 'w'))
+              'jsons', f'unknown_page_name-train-{args.cur_time}.json'), 'w'), indent=4)
     json.dump(unknown_page_len, open(os.path.join(args.experiment_dir,
-              'jsons', f'unknown_page_len-train-{args.cur_time}.json'), 'w'))
+              'jsons', f'unknown_page_len-train-{args.cur_time}.json'), 'w'), indent=4)
 
     # 按照真实数据集的比例混合正常和异常数据，真实数据集的比例即 异常用户数 / 正常用户数
     # 这里假定session_vector_list和session_vector_list_abnormal就是真实数据集，因此不需要进行抽样，直接按照比例混合即可
@@ -345,9 +364,9 @@ def prepare_test_data(args, **kwargs):
     if not os.path.exists(os.path.join(args.experiment_dir, 'jsons')):
         os.makedirs(os.path.join(args.experiment_dir, 'jsons'))
     json.dump(unknown_page_name, open(os.path.join(args.experiment_dir,
-              'jsons', f'unknown_page_name-test-{args.cur_time}.json'), 'w'))
+              'jsons', f'unknown_page_name-test-{args.cur_time}.json'), 'w'), indent=4)
     json.dump(unknown_page_len, open(os.path.join(args.experiment_dir,
-              'jsons', f'unknown_page_len-test-{args.cur_time}.json'), 'w'))
+              'jsons', f'unknown_page_len-test-{args.cur_time}.json'), 'w'), indent=4)
 
     # 合并训练数据
     data = torch.cat((data_normal, data_abnormal), dim=0)

@@ -15,14 +15,14 @@ python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
                 --filter_num 10 \
+                --max_seq_len 200 \
                 --vocab_dict_path pre/data/page2idx-2023-01-20-21-57-52.json \
-                --max_seq_len 100 \
                 --vocab_size 10000 \
                 --embedding_dim 300 \
                 --hidden_dim 512 \
                 --lr 0.0002 \
                 --epochs 50 \
-                --batch_size 48 \
+                --batch_size 48
 ```
 
 ### test
@@ -32,8 +32,8 @@ python test.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
                 --filter_num 10 \
-                --vocab_dict_path pre/data/page2idx-2023-01-20-21-57-52.json \
-                --max_seq_len 100
+                --max_seq_len 100 \
+                --vocab_dict_path pre/data/page2idx-2023-01-20-21-57-52.json
 ```
 
 ## Reference
