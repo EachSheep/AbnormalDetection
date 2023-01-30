@@ -105,9 +105,9 @@ def encode_page(pagename_cnt_path : str):
         '<pad>' : 2
     }
     page2idx.update(dict(zip(all_page, range(3, len(all_page) + 3))))
-    json.dump(page2idx, open(f"pre/data/page2idx-{cur_time}.json", "w"), indent=4)
+    json.dump(page2idx, open(f"pre/assets/page2idx.json", "w"), indent=4)
     idx2page = dict(zip(range(len(all_page) + 3), ['<eos>', '<unk>', '<pad>'] + list(all_page)))
-    json.dump(idx2page, open(f"pre/data/idx2page-{cur_time}.json", "w"), indent=4)
+    json.dump(idx2page, open(f"pre/assets/idx2page.json", "w"), indent=4)
 
 if __name__ == "__main__":
     generate_pagename_cnt()
@@ -133,7 +133,7 @@ if __name__ == "__main__":
                 page2num[page] = num
     json.dump(page2num, open(f"pre/data/page2num-merge-{cur_time}.json", "w"), indent=4)
     safe_dict, url_dict = wash_pagename(page2num_path = f"pre/data/page2num-merge-{cur_time}.json")
-    json.dump(safe_dict, open('pre/data/safe_dict.json', 'w'), indent=4)
-    json.dump(url_dict, open('pre/data/url_dict.json', 'w'), indent=4)
+    json.dump(safe_dict, open('pre/data/page2num_afterwash.json', 'w'), indent=4)
+    json.dump(url_dict, open('pre/data/page2num_failedwash.json', 'w'), indent=4)
 
-    encode_page(pagename_cnt_path = 'pre/data/safe_dict.json')
+    encode_page(pagename_cnt_path = 'pre/data/page2num_afterwash.json')
