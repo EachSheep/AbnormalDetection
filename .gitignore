@@ -112,7 +112,7 @@ venv.bak/
 <<<<<<< HEAD
 
 __pycache__
-*.txt
+# *.txt
 *.zip
 checkpoints/
 .vector_cache/
