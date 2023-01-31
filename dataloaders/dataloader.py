@@ -50,6 +50,9 @@ def prepare_normal_data(args, **kwargs):
     # 去除normal中session_id的交集
     df_normal = df_normal[~df_normal["session_id"].isin(df_abnormal["session_id"].unique())]
 
+    # 去除normal中的nan
+    df_normal = df_normal.dropna(subset=['page_name'])
+
     # 然后对数据中的page_name进行清洗
     df_normal['page_name'] = df_normal['page_name'].map(preprocess)
     # 先给不是url、在extension_of_filename中，在lastword_dict、freq_lastword_dict中的的数据打上标签
@@ -147,6 +150,9 @@ def prepare_abnormal_data(args, **kwargs):
     df_abnormal = df_abnormal.reset_index()
     df_abnormal.rename(columns={"index": "unique_id"}, inplace=True)
     print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))
+
+    # 去除normal中的nan
+    df_abnormal = df_abnormal.dropna(subset=['page_name'])
 
     # 然后对数据中的page_name进行清洗
     df_abnormal['page_name'] = df_abnormal['page_name'].map(preprocess)
