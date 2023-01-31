@@ -52,6 +52,15 @@ def prepare_normal_data(args, **kwargs):
 
     # 然后对数据中的page_name进行清洗
     df_normal['page_name'] = df_normal['page_name'].map(preprocess)
+    # 先给不是url、在extension_of_filename中，在lastword_dict、freq_lastword_dict中的的数据打上标签
+    df_normal['is_ok'] = df_normal['page_name'].map(filter_by_url)
+    # 给在freq_url_dict中的数据打上标签
+    df_normal['is_ok'] = df_normal['is_ok'] + df_normal['page_name'].map(filter_by_freq_url)
+    # 给is_ok == False的page_name做一次process_by_force的操作
+    df_nomral_no_process = df_normal[df_normal['is_ok'] == True]
+    df_normal_need_process = df_normal[df_normal['is_ok'] == False]
+    df_normal_need_process.loc[:, ['page_name']] = df_normal_need_process['page_name'].map(process_by_force)
+    df_normal = pd.concat([df_nomral_no_process, df_normal_need_process])
     
     # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。
     df_normal_cnt = df_normal.groupby("session_id")['unique_id'].count()
@@ -141,6 +150,15 @@ def prepare_abnormal_data(args, **kwargs):
 
     # 然后对数据中的page_name进行清洗
     df_abnormal['page_name'] = df_abnormal['page_name'].map(preprocess)
+    # 先给不是url、在extension_of_filename中，在lastword_dict、freq_lastword_dict中的的数据打上标签
+    df_abnormal['is_ok'] = df_abnormal['page_name'].map(filter_by_url)
+    # 给在freq_url_dict中的数据打上标签
+    df_abnormal['is_ok'] = df_abnormal['is_ok'] + df_abnormal['page_name'].map(filter_by_freq_url)
+    # 给is_ok == False的page_name做一次process_by_force的操作
+    df_abnomral_no_process = df_abnormal[df_abnormal['is_ok'] == True]
+    df_abnormal_need_process = df_abnormal[df_abnormal['is_ok'] == False]
+    df_abnormal_need_process.loc[:, ['page_name']] = df_abnormal_need_process['page_name'].map(process_by_force)
+    df_abnormal = pd.concat([df_abnomral_no_process, df_abnormal_need_process])
 
     # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。
     df_abnormal_cnt = df_abnormal.groupby("session_id")['unique_id'].count()

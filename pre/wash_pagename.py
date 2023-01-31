@@ -58,6 +58,7 @@ def filter_by_ifurl(url):
     else:
         return True
 
+
 extension_of_filename = set([extension.lower() for extension in json.load(
     open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets/extension_of_filename.json'), 'r'))])  # 以各种拓展名结尾的
 
@@ -77,14 +78,26 @@ def filter_by_extension(url):
         return False
 
 
-# safe_dict: 一定是关键词的词典
+# lastword_dict: 一定是关键词的词典
 if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/')):
     os.makedirs(os.path.join(os.path.dirname(__file__), 'assets/'))
-if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/safe_dict.json')):
-    with open(os.path.join(os.path.dirname(__file__), 'assets/safe_dict.json'), 'w') as f:
+if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/lastword_dict.json')):
+    with open(os.path.join(os.path.dirname(__file__), 'assets/lastword_dict.json'), 'w') as f:
         json.dump({}, f)
-safe_dict = json.load(open(os.path.join(os.path.dirname(__file__), 'assets/safe_dict.json'), 'r'))  # 读取safe_dict
-safe_dict = [word.lower() for word in safe_dict]
+lastword_dict = json.load(open(os.path.join(os.path.dirname(
+    __file__), 'assets/lastword_dict.json'), 'r'))  # 读取safe_dict
+lastword_dict = [word.lower() for word in lastword_dict]
+if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/')):
+    os.makedirs(os.path.join(os.path.dirname(__file__), 'assets/'))
+if not os.path.exists('pre/assets/freq_lastword_dict.json'):
+    with open(os.path.join(os.path.dirname(__file__), 'assets/freq_lastword_dict.json'), 'w') as f:
+        json.dump({}, f)
+# 读取freq_lastword_dict
+freq_lastword_dict = json.load(open(os.path.join(os.path.dirname(
+    __file__), 'assets/freq_lastword_dict.json'), 'r'))
+freq_lastword_dict = [word.lower() for word in freq_lastword_dict]
+
+last_dict = list(set(lastword_dict + freq_lastword_dict))
 
 
 def filter_by_dict(url):
@@ -96,20 +109,7 @@ def filter_by_dict(url):
     """
     # 末尾必须是非字母数字
     url_lastword = re.search(r'[^a-zA-Z0-9]([a-zA-Z0-9_]+)$', url)
-    if url_lastword and url_lastword.group()[1:] in safe_dict:
-        return True
-    else:
-        return False
-
-
-def filter_by_cnt(url_num):
-    """根据url出现次数过滤
-    Args:
-        url_num (int): 待过滤的url对应的出现次数
-    Returns:
-        filter_or_not (bool) : 是否被过滤掉，是为True, 否为False
-    """
-    if url_num >= 10:
+    if url_lastword and url_lastword.group()[1:] in last_dict:
         return True
     else:
         return False
@@ -125,30 +125,80 @@ def filter_by_url(url):
     return filter_by_ifurl(url) or filter_by_extension(url) or filter_by_dict(url)
 
 
-def filter_by_urlcnt(cnt):
+if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/')):
+    os.makedirs(os.path.join(os.path.dirname(__file__), 'assets/'))
+if not os.path.exists('pre/assets/freq_url_dict.json'):
+    with open(os.path.join(os.path.dirname(__file__), 'assets/freq_url_dict.json'), 'w') as f:
+        json.dump({}, f)
+# 读取freq_url_dict
+freq_url_dict = json.load(open(os.path.join(os.path.dirname(
+    __file__), 'assets/freq_url_dict.json'), 'r'))
+freq_url_dict = [word.lower() for word in freq_url_dict]
+
+
+def filter_by_freq_url(url):
     """过滤url
     Args:
-        cnt (int): 待过滤的url对应的出现次数
+        url (str): 待过滤的url
     Returns:
         filter_or_not (bool) : 是否被过滤掉，是为True, 否为False
     """
-    return filter_by_cnt(cnt)
+    if url in freq_url_dict:
+        return True
+    else:
+        return False
 
 
-def filter_by_lastword_frequency(url_list, url_num):
-    """按照url最后一个/后面的词的频率过滤url，同时更新freq_dict
-    freq_dict: 自动根据当天的频率生成的词典，最多保留10000条，超了过后，旧的词会被删除
+def filter_by_url_frequency(url_list, url_num):
+    """按照url的频率过滤url，同时更新freq_url_dict
+    freq_url_dict: 自动根据当天的频率生成的词典，最多保留10000条，超了过后，旧的词会被删除
 
     Args:
         url_list (list): 待过滤的url
         url_num (list): 待过滤的url的出现次数
     Returns:
-        safe_list (list): 安全的url的索引
+        index_list (list): 安全的url的索引
     """
     if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/')):
         os.makedirs(os.path.join(os.path.dirname(__file__), 'assets/'))
-    if not os.path.exists('pre/assets/freq_dict.json'):
-        with open(os.path.join(os.path.dirname(__file__), 'assets/freq_dict.json'), 'w') as f:
+    if not os.path.exists('pre/assets/freq_url_dict.json'):
+        with open(os.path.join(os.path.dirname(__file__), 'assets/freq_url_dict.json'), 'w') as f:
+            json.dump({}, f)
+
+    url_dict = [url_list[i]
+                for i in range(len(url_list)) if url_num[i] >= 10]  # 筛选出出现次数多的url
+
+    # 读取freq_dict
+    freq_url_dict = json.load(
+        open(os.path.join(os.path.dirname(__file__), 'assets/freq_url_dict.json'), 'r'))
+    freq_url_dict = [cur_url.lower() for cur_url in freq_url_dict]
+    freq_url_dict = freq_url_dict + url_dict
+    freq_url_dict = sorted(set(freq_url_dict), key=freq_url_dict.index)  # 稳定去重
+    if len(freq_url_dict) > 10000:
+        freq_url_dict = freq_url_dict[-10000:]
+    json.dump(freq_url_dict, open(os.path.join(os.path.dirname(__file__), 'assets/freq_url_dict.json'), 'w'),
+              indent=4)  # 更新词典至文件
+
+    index_list = np.array(  # 以词典中的词结尾的url为安全url
+        [True if cur_url in freq_url_dict else False for cur_url in url_list])
+
+    return index_list
+
+
+def filter_by_lastword_frequency(url_list, url_num):
+    """按照url最后一个/后面的词的频率过滤url，同时更新freq_lastword_dict
+    freq_lastword_dict: 自动根据当天的频率生成的词典，最多保留10000条，超了过后，旧的词会被删除
+
+    Args:
+        url_list (list): 待过滤的url
+        url_num (list): 待过滤的url的出现次数
+    Returns:
+        index_list (list): 安全的url的索引
+    """
+    if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/')):
+        os.makedirs(os.path.join(os.path.dirname(__file__), 'assets/'))
+    if not os.path.exists('pre/assets/freq_lastword_dict.json'):
+        with open(os.path.join(os.path.dirname(__file__), 'assets/freq_lastword_dict.json'), 'w') as f:
             json.dump({}, f)
 
     url_lastword_list = [
@@ -165,17 +215,19 @@ def filter_by_lastword_frequency(url_list, url_num):
                 for word in url_lastword if word[1] >= 10]  # 筛选出出现次数多的词
 
     # 读取freq_dict
-    freq_dict = json.load(open(os.path.join(os.path.dirname(__file__), 'assets/freq_dict.json'), 'r'))
-    freq_dict = [word.lower() for word in freq_dict]
-    freq_dict = freq_dict + url_dict
-    freq_dict = sorted(set(freq_dict), key=freq_dict.index)  # 稳定去重
-    if len(freq_dict) > 10000:
-        freq_dict = freq_dict[-10000:]
-    json.dump(freq_dict, open(os.path.join(os.path.dirname(__file__), 'assets/freq_dict.json'), 'w'),
+    freq_lastword_dict = json.load(open(os.path.join(
+        os.path.dirname(__file__), 'assets/freq_lastword_dict.json'), 'r'))
+    freq_lastword_dict = [word.lower() for word in freq_lastword_dict]
+    freq_lastword_dict = freq_lastword_dict + url_dict
+    freq_lastword_dict = sorted(
+        set(freq_lastword_dict), key=freq_lastword_dict.index)  # 稳定去重
+    if len(freq_lastword_dict) > 10000:
+        freq_lastword_dict = freq_lastword_dict[-10000:]
+    json.dump(freq_lastword_dict, open(os.path.join(os.path.dirname(__file__), 'assets/freq_lastword_dict.json'), 'w'),
               indent=4)  # 更新词典至文件
 
     index_list = np.array(  # 以词典中的词结尾的url为安全url
-        [True if word in freq_dict else False for word in url_lastword_list])
+        [True if word in freq_lastword_dict else False for word in url_lastword_list])
 
     return index_list
 
@@ -193,309 +245,65 @@ def filter_by_special(safe_list, safe_num, url_list, url_num):
         url_list (list): 待过滤的url
         url_num (list): 待过滤的url的出现次数
     """
-    # 将这样的url "https://d.feizhu.com/xxxxxxx"变成"https://d.feizhu.com"
-    special_url_list = [  # 含有这些字符的url，全部变成这些字符，并加入safe_list
-        'https://d.feizhu.com',
-    ]
+    # keep_url = [
+    #     # 将"https://c.tb.cn/e1.zfrswwh"变成"https://c.tb.cn/e1"
+    #     "https://c.tb.cn",
+    #     # 往往是某个商品的二维码 将"https://m.tb.cn/h.UkSFhyY"变成"https://m.tb.cn/h"
+    #     "https://m.tb.cn",
+    # ]
+    # index_list = np.array([False for url in url_list])
+    # for i, url in enumerate(url_list):
+    #     for special_url in keep_url:
+    #         if special_url in url:
+    #             index_list[i] = True
+    #             break
+    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
+    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
+    # url_list = np.array(url_list)[index_list == False].tolist()
+    # url_num = np.array(url_num)[index_list == False].tolist()
+    # tmp = {}
+    # for i, safe_url in enumerate(tmp_url_list):
+    #     tmp_url_list[i] = '.'.join(safe_url.split('.')[:-1])
+    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
+    # safe_list.extend(tmp.keys())
+    # safe_num.extend(tmp.values())
 
-    for special_url in special_url_list:
-        index_list = np.array(
-            [True if special_url in url else False for url in url_list])
-        safe_list.append(special_url)
-        safe_num.append(int(np.sum(np.array(url_num)[index_list == True])))
-        url_list = np.array(url_list)[index_list == False].tolist()
-        url_num = np.array(url_num)[index_list == False].tolist()
-
-    # 将这样的url "https://c.tb.cn/e1.zfrswwh"变成"https://c.tb.cn/e1"
-    special_url = "https://c.tb.cn/"  # 先筛出含有这些字符的url，再根据后面的字符进行筛选
-    index_list = np.array(
-        [True if special_url in url else False for url in url_list])
-    tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    url_list = np.array(url_list)[index_list == False].tolist()
-    url_num = np.array(url_num)[index_list == False].tolist()
-    tmp = {}
-    for i, safe_url in enumerate(tmp_url_list):
-        tmp_url_list[i] = special_url + re.split('\/|\.', safe_url)[-2]
-        tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    safe_list.extend(tmp.keys())
-    safe_num.extend(tmp.values())
-
-    # 最后带有点的url经过观察，往往是某个商品的二维码 https://m.tb.cn/h.UkSFhyY
-    index_list = np.array(
-        [True if 'm.tb.cn' in url else False for url in url_list])
-    tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    url_list = np.array(url_list)[index_list == False].tolist()
-    url_num = np.array(url_num)[index_list == False].tolist()
-    tmp = {}
-    for i, safe_url in enumerate(tmp_url_list):
-        tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-        tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    safe_list.extend(tmp.keys())
-    safe_num.extend(tmp.values())
-
-    # 特殊处理"https://pontus-image-common.oss-cn-hangzhou.aliyuncs.com/img/2214673369151/7f2ccedf3d2a4e7586097f3bff9dfbb2/xxxxx"
-    index_list = np.array(
-        [True if 'pontus-image-common.oss-cn-hangzhou.aliyuncs.com' in url else False for url in url_list])
-    tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    url_list = np.array(url_list)[index_list == False].tolist()
-    url_num = np.array(url_num)[index_list == False].tolist()
-    tmp = {}
-    for i, safe_url in enumerate(tmp_url_list):
-        tmp_url_list[i] = '/'.join(safe_url.split('/')[:-2])
-        tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    safe_list.extend(tmp.keys())
-    safe_num.extend(tmp.values())
-
-    # 特殊处理"https://d2cxkq4yy.wasee.com/wt/xxx"
-    index_list = np.array(
-        [True if 'wasee.com' in url else False for url in url_list])
-    tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    url_list = np.array(url_list)[index_list == False].tolist()
-    url_num = np.array(url_num)[index_list == False].tolist()
-    tmp = {}
-    for i, safe_url in enumerate(tmp_url_list):
-        tmp_url_list[i] = "https://wasee.com/" + \
-            '/'.join(safe_url.split('/')[3:-1])
-        tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    safe_list.extend(tmp.keys())
-    safe_num.extend(tmp.values())
-
-    # 粗略的暴力筛选: .com, .cn, .net等按照/分割去掉最后一个元素
-    index_list = np.array([True for url in url_list])
-    tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    url_list = np.array(url_list)[index_list == False].tolist()
-    url_num = np.array(url_num)[index_list == False].tolist()
-    tmp = {}
-    for i, safe_url in enumerate(tmp_url_list):
-        tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-        tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    safe_list.extend(tmp.keys())
-    safe_num.extend(tmp.values())
-
-    # # "https://haibao.m.taobao.com/html/1wa_dcwia"，类似这样的url是海报，保留
-    # index_list = np.array([True if 'haibao.m.taobao.com' in url else False for url in url_list])
+    # keep_url = [
+    #     # 'https://d.feizhu.com', # 飞猪各种各样的链接，保留
+    #     # "https://haibao.m.taobao.com/html/1wa_dcwia"，类似这样的url是海报，保留, 37次在page2num中出现（不算频率）
+    #     # 'https://haibao.m.taobao.com/html',
+    #     # "https://survey.taobao.com/apps/zhiliao/m6acodnko"，类似这样的url是问卷，保留, 27次在page2num中出现（不算频率）
+    #     # 'https://survey.taobao.com/apps/zhiliao/',
+    #     # "https://market.m.taobao.com/markets/h5/ryysztj_copy", # 这个url不知道干啥的，保留
+    #     # "https://market.m.taobao.com/app/trip/rx-shop-one/pages", # 这个url不知道干啥的，保留
+    #     # "https://survey.alitrip.com/survey/kwvma3ju4"，这个url是问卷，保留
+    #     # "https://survey.alitrip.com/survey/",
+    #     # "https://v.ubox.cn/qr/c0820141_309_1",这个url是每一件具体的商品，保留
+    #     # "https://v.ubox.cn/qr/",
+    #     # "https://isite.baidu.com/site/wjzkgwn0/c5b49b38-24fd-4101-bb30-c1470444ba93", 这个url是百度商品广告，保留
+    #     # "https://isite.baidu.com/site/",
+    #     # https://pages.tmall.com/wow/an/tmall/default-rax/1781b61b73d，这个是天猫的啥活动，保留
+    #     # "https://pages.tmall.com/wow/an/tmall/default-rax/",
+    #     # https://d2cxkq4yy.wasee.com/wt/d2cxkq4yy, 这个是什么景区网站，保留
+    #     # "wasee.com/wt/",
+    #     # "https://go.smzdm.com/e7e98445c2688df1/ca_aa_yh_5337_69667390_14763_0_5329_0", 这个是买什么东西，保留
+    #     # "https://go.smzdm.com/",
+    # ]
+    # index_list = np.array([False for url in url_list])
+    # for i, url in enumerate(url_list):
+    #     for special_url in keep_url:
+    #         if special_url in url:
+    #             index_list[i] = True
+    #             break
     # safe_list.extend(np.array(url_list)[index_list == True].tolist())
     # safe_num.extend(np.array(url_num)[index_list == True].tolist())
     # url_list = np.array(url_list)[index_list == False].tolist()
     # url_num = np.array(url_num)[index_list == False].tolist()
-
-    # # "https://survey.taobao.com/apps/zhiliao/m6acodnko"，类似这样的url是问卷，保留
-    # index_list = np.array([True if 'survey.taobao.com' in url else False for url in url_list])
-    # safe_list.extend(np.array(url_list)[index_list == True].tolist())
-    # safe_num.extend(np.array(url_num)[index_list == True].tolist())
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-
-    # # "https://market.m.taobao.com/markets/h5/ryysztj_copy"
-    # # "https://market.m.taobao.com/app/trip/rx-shop-one/pages/null"，这两个url不知道干啥的，保留
-    # index_list = np.array([True if 'market.m.taobao.com' in url else False for url in url_list])
-    # safe_list.extend(np.array(url_list)[index_list == True].tolist())
-    # safe_num.extend(np.array(url_num)[index_list == True].tolist())
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-
-    # # "https://survey.alitrip.com/survey/kwvma3ju4"，这个url是问卷，保留
-    # index_list = np.array([True if 'survey.alitrip.com' in url else False for url in url_list])
-    # safe_list.extend(np.array(url_list)[index_list == True].tolist())
-    # safe_num.extend(np.array(url_num)[index_list == True].tolist())
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-
-    # # "https://v.ubox.cn/qr/c0820141_309_1",这个url是每一件具体的商品，保留
-    # index_list = np.array([True if 'v.ubox.cn' in url else False for url in url_list])
-    # safe_list.extend(np.array(url_list)[index_list == True].tolist())
-    # safe_num.extend(np.array(url_num)[index_list == True].tolist())
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-
-    # # "https://isite.baidu.com/site/wjzkgwn0/c5b49b38-24fd-4101-bb30-c1470444ba93", 这个url是百度商品广告，保留
-    # index_list = np.array([True if 'isite.baidu.com/site' in url else False for url in url_list])
-    # safe_list.extend(np.array(url_list)[index_list == True].tolist())
-    # safe_num.extend(np.array(url_num)[index_list == True].tolist())
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-
-    # # https://pages.tmall.com/wow/an/tmall/default-rax/1781b61b73d，这个是天猫的啥活动，保留
-    # index_list = np.array([True if 'pages.tmall.com' in url else False for url in url_list])
-    # safe_list.extend(np.array(url_list)[index_list == True].tolist())
-    # safe_num.extend(np.array(url_num)[index_list == True].tolist())
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-
-    # # https://d2cxkq4yy.wasee.com/wt/d2cxkq4yy, 这个是什么景区网站，保留
-    # index_list = np.array([True if 'wasee.com' in url else False for url in url_list])
-    # safe_list.extend(np.array(url_list)[index_list == True].tolist())
-    # safe_num.extend(np.array(url_num)[index_list == True].tolist())
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-
-    # # "https://go.smzdm.com/e7e98445c2688df1/ca_aa_yh_5337_69667390_14763_0_5329_0", 这个是买什么东西，保留
-    # index_list = np.array([True if 'go.smzdm.com' in url else False for url in url_list])
-    # safe_list.extend(np.array(url_list)[index_list == True].tolist())
-    # safe_num.extend(np.array(url_num)[index_list == True].tolist())
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-
-    # # "https://ur.alipay.com/1s1c6d"，这个url是支付宝的，变成"https://ur.alipay.com"
-    # index_list = np.array([True if 'ur.alipay.com' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-    # safe_num.extend(tmp.values())
-
-    # #  "https://s.click.taobao.com/x3x55ou", 这个url是淘宝的，变成"https://s.click.taobao.com"
-    # index_list = np.array([True if 's.click.taobao.com' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-    # safe_num.extend(tmp.values())
-
-    # # "https://p.tb.cn/2lhtuv"，这个url是淘宝的，变成"https://p.tb.cn"
-    # index_list = np.array([True if 'p.tb.cn' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-    # safe_num.extend(tmp.values())
-
-    # # "https://t.tb.cn/2xojdcmevlwrtk9pv5mhnb", 这个url是淘宝的，变成"https://t.tb.cn"
-    # index_list = np.array([True if 't.tb.cn' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-    # safe_num.extend(tmp.values())
-
-    # # "https://l.eubrmb.com/q/2pnfclr4zu3", 这个url不知道干嘛的，变成"https://l.eubrmb.com"
-    # index_list = np.array([True if 'l.eubrmb.com' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-
-    # # "https://f.m.taobao.com/wow/z/pcraft/btrip/3rtdt3xhrdtnyn4erpiq", 这个url不知道干嘛的，变成"https://f.m.taobao.com/wow/z/pcraft/btrip"
-    # index_list = np.array([True if 'f.m.taobao.com' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-
-    # # "https://u.tb.cn/1weulynkkzzme7yuvjbcrt", 这个url不知道干嘛的，变成"https://u.tb.cn"
-    # index_list = np.array([True if 'u.tb.cn' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-    # safe_num.extend(tmp.values())
-
-    # # "https://weixin.qq.com/r/leza2mhe2zymryw79xk_", 这个url微信链接，变成"https://weixin.qq.com/r"
-    # index_list = np.array([True if 'weixin.qq.com' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-    # safe_num.extend(tmp.values())
-
-    # # "https://3hours.taobao.com/wow/z/3hours/default/n45tyrxrh4bas7aw3wk3"
-    # # "https://3hours.taobao.com/17lai", 这个不知道干嘛的，变成"https://3hours.taobao.com"
-    # index_list = np.array([True if '3hours.taobao.com' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-    # safe_num.extend(tmp.values())
-
-    # # "https://tb.cn/w4aqcev", 不知道干嘛的，变成"https://tb.cn"
-    # index_list = np.array([True if 'tb.cn' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-    # safe_num.extend(tmp.values())
-
-    # # "https://pontus-image-common.oss-cn-hangzhou.aliyuncs.com/img/3236747168/2b5e6953654749068f813984b7c44b17/seller_id414581727335690310": 2,
-    # # "https://pontus-image-common.oss-cn-hangzhou.aliyuncs.com/img/3236747168/d11590f38a584f85952beb1a437f5e76/seller_id414581739011034150": 2,
-    # # 下载什么东西，变成"https://pontus-image-common.oss-cn-hangzhou.aliyuncs.com"
-    # index_list = np.array([True if 'pontus-image-common.oss-cn-hangzhou.aliyuncs.com' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-2])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-    # safe_num.extend(tmp.values())
-
-    # # "https://v.douyin.com/kdsapte"，抖音的什么视频
-    # index_list = np.array([True if 'v.douyin.com' in url else False for url in url_list])
-    # tmp_url_list = np.array(url_list)[index_list == True].tolist()
-    # tmp_num_list = np.array(url_num)[index_list == True].tolist()
-    # url_list = np.array(url_list)[index_list == False].tolist()
-    # url_num = np.array(url_num)[index_list == False].tolist()
-    # tmp = {}
-    # for i, safe_url in enumerate(tmp_url_list):
-    #     tmp_url_list[i] = '/'.join(safe_url.split('/')[:-1])
-    #     tmp[tmp_url_list[i]] = tmp.get(tmp_url_list[i], 0) + tmp_num_list[i]
-    # safe_list.extend(tmp.keys())
-    # safe_num.extend(tmp.values())
-
     return safe_list, safe_num, url_list, url_num
+
+
+def process_by_force(url):
+    """暴力处理一下url, 按照/分割去掉最后一个元素
+    """
+    ret_url = '/'.join(url.split('/')[:-1])
+    return ret_url

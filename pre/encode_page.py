@@ -43,13 +43,54 @@ def generate_pagename_cnt():
     page2num = dict(zip(all_page_num.index, [int(value) for value in all_page_num.values]))
     json.dump(page2num, open(f"pre/data/page2num-origin-simulate.json", "w"), indent=4)
 
+def generate_lastword_dict(page2num):
+    """生成最后一个单词的字典
+    Args:
+        page2num (dict): page_name -> num
+    Returns:
+        None
+    """
+    # 词频统计后手动生成lastword_dict
+    words2freq = {}
+    for page, num in page2num.items():
+        # 按照非字母数字下划线进行分词
+        words = [word for word in re.split(r'[^a-zA-Z0-9]', page.lower()) if word]
+        for word in words:
+            if word in words2freq:
+                words2freq[word] += num
+            else:
+                words2freq[word] = num
+        words = [word for word in re.split(r'[^a-zA-Z0-9_]', page.lower()) if word]
+        for word in words:
+            if word in words2freq:
+                words2freq[word] += num
+            else:
+                words2freq[word] = num
+    # >=50的词作为lastword_dict的成员
+    lastword_list = [word for word in words2freq.keys() if words2freq[word] >= 50]
+    json.dump(lastword_list, open(f"pre/assets/lastword_list1.json", "w"), indent=4)
+    # words2freq_pd = pd.DataFrame(words2freq.items(), columns=['word', 'freq'])
+    # words2freq_pd = words2freq_pd.sort_values(by='freq', ascending=False) 
+    # words2freq_pd.to_csv(f'pre/data/words2freq-{cur_time}.csv', index=False)
+
+    # 手动查找单词
+    # import nltk
+    # nltk.download('wordnet')
+    # nltk.download('omw-1.4')
+    from nltk.corpus import wordnet
+    lastword_list = []
+    for word in words2freq.keys():
+        if wordnet.synsets(word)!=[]: # 是一个单词
+            lastword_list.append(word)
+    json.dump(lastword_list, open(f"pre/assets/lastword_list2.json", "w"), indent=4)
+
 def wash_pagename(page2num_path: str):
     """
     Args:
         page2num_path (str): page_name到数量的映射
     Returns:
-        safe_dict (dict): 清洗过的page_name到数量的映射
-        url_dict (dict): 清洗失败的page_name到数量的映射
+        afterwash_dict (dict): 清洗过的page_name到数量的映射
+        washfailed_dict (dict): 清洗失败的page_name到数量的映射
     """
     page2num = json.load(open(page2num_path, 'r'))
     url_list, url_cnt = list(page2num.keys()), list(page2num.values())
@@ -59,34 +100,42 @@ def wash_pagename(page2num_path: str):
     
     safe_list, safe_num = [], []
 
-    # 根据url做过滤
+    # 根据url本身做过滤（是否是url、结尾的拓展名、是否在lastword_dict中）
     index_list = list(map(filter_by_url, url_list))
     safe_list.extend(np.array(url_list)[index_list].tolist())
     safe_num.extend(np.array(url_cnt)[index_list].tolist())
     url_list = np.array(url_list)[~np.array(index_list)].tolist()
     url_cnt = np.array(url_cnt)[~np.array(index_list)].tolist()
-
-    # 根据url_cnt做过滤
-    index_list = list(map(filter_by_urlcnt, url_cnt))
-    safe_list.extend(np.array(url_list)[index_list].tolist())
-    safe_num.extend(np.array(url_cnt)[index_list].tolist())
-    url_list = np.array(url_list)[~np.array(index_list)].tolist()
-    url_cnt = np.array(url_cnt)[~np.array(index_list)].tolist()
     
-    # 按照最后一个词出现的频率进行过滤
+    # 按照最后一个词出现的频率进行过滤，生成freq_lastword_dict
     index_list = filter_by_lastword_frequency(url_list, url_cnt)
     safe_list.extend(np.array(url_list)[index_list].tolist())
     safe_num.extend(np.array(url_cnt)[index_list].tolist())
     url_list = np.array(url_list)[~np.array(index_list)].tolist()
     url_cnt = np.array(url_cnt)[~np.array(index_list)].tolist()
 
+    # 按照url出现的频率进行过滤，生成freq_url_dict
+    index_list = filter_by_url_frequency(url_list, url_cnt)
+    safe_list.extend(np.array(url_list)[index_list].tolist())
+    safe_num.extend(np.array(url_cnt)[index_list].tolist())
+    url_list = np.array(url_list)[~np.array(index_list)].tolist()
+    url_cnt = np.array(url_cnt)[~np.array(index_list)].tolist()
+
     safe_list, safe_num, url_list, url_cnt = filter_by_special(safe_list, safe_num, url_list, url_cnt) # 这个操作放后面，特殊情况特殊处理
+
+    url_list = list(map(process_by_force, url_list))
+    url_list, url_cnt = merge_url(url_list, url_cnt) # 经过预处理一些url可能已经重合，进行合并
+    index_list = [True for _ in range(len(url_list))]
+    safe_list.extend(np.array(url_list)[index_list].tolist())
+    safe_num.extend(np.array(url_cnt)[index_list].tolist())
+    url_list = np.array(url_list)[~np.array(index_list)].tolist()
+    url_cnt = np.array(url_cnt)[~np.array(index_list)].tolist()
     
-    safe_dict = dict(zip(safe_list, safe_num))
-    # json.dump(safe_dict, open('pre/data/safe_dict.json', 'w'), indent=4)
-    url_dict = dict(zip(url_list, url_cnt))
-    # json.dump(url_dict, open('pre/data/url_dict.json', 'w'), indent=4)
-    return safe_dict, url_dict
+    afterwash_dict = dict(zip(safe_list, safe_num))
+    # json.dump(afterwash_dict, open('pre/data/afterwash_dict.json', 'w'), indent=4)
+    washfailed_dict = dict(zip(url_list, url_cnt))
+    # json.dump(washfailed_dict, open('pre/data/washfailed_dict.json', 'w'), indent=4)
+    return afterwash_dict, washfailed_dict
 
 
 def encode_page(pagename_cnt_path : str):
@@ -132,8 +181,11 @@ if __name__ == "__main__":
             else:
                 page2num[page] = num
     json.dump(page2num, open(f"pre/data/page2num-merge-{cur_time}.json", "w"), indent=4)
-    safe_dict, url_dict = wash_pagename(page2num_path = f"pre/data/page2num-merge-{cur_time}.json")
-    json.dump(safe_dict, open('pre/data/page2num_afterwash.json', 'w'), indent=4)
-    json.dump(url_dict, open('pre/data/page2num_failedwash.json', 'w'), indent=4)
+    
+    # generate_lastword_dict(page2num)
+
+    afterwash_dict, washfailed_dict = wash_pagename(page2num_path = f"pre/data/page2num-merge-{cur_time}.json")
+    json.dump(afterwash_dict, open('pre/data/page2num_afterwash.json', 'w'), indent=4)
+    json.dump(washfailed_dict, open('pre/data/page2num_failedwash.json', 'w'), indent=4)
 
     encode_page(pagename_cnt_path = 'pre/data/page2num_afterwash.json')
