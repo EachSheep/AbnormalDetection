@@ -19,6 +19,7 @@ cur_time = '2023-01-20-21-57-52'
 sys.path.append("./")
 
 import pre.utils.MyDrawer as MyDrawer
+from pre.utils.MyTrie import Trie
 
 parser = argparse.ArgumentParser(description='data_sniff')
 parser.add_argument('-infile_directory', type=str,
@@ -178,8 +179,61 @@ def draw_user_sessionnum():
     json.dump(normal_cnt.values.tolist(), open(f"pre/figures/usernum_normal_cnt-{cur_time}.json", "w")) # session中的页面长度
     json.dump(feedback_cnt.values.tolist(), open(f"pre/figures/usernum_feedback_cnt-{cur_time}.json", "w")) # session中的页面长度
 
+def draw_pagenum_distribution():
+    """根据data/page2num-origin.csv绘制页面的分布
+    """
+    drawer = MyDrawer.MyDrawer()
+
+    data_path = "pre/data/page2num-origin-2023-01-20-21-57-52.json"
+    page2num = json.load(open(data_path, "r"))
+    page2num_list = sorted(page2num.items(), key=lambda x: x[1], reverse=True)
+
+    x_list = [[i for i in range(len(page2num_list))]]
+    y_list = [[cur[1] for cur in page2num_list]]
+    fig = plt.figure(111)
+    ax = fig.add_subplot(111)
+    drawer.drawMultipleLineChart(
+        x_list,
+        y_list,
+        xlabel="Page id",
+        ylabel="Page num",
+        xscale="log",
+        yscale="linear",
+        color_list=None,
+        marker_list=None,
+        legend_label_list=None,
+        fig=fig,
+        ax=ax,
+    )
+    plt.savefig(
+        f"pre/figures/pagenum_distribution-{cur_time}.png", bbox_inches='tight')
+    
+    # 多少是url，多少不是url
+    from wash_pagename import preprocess, merge_url, filter_by_ifurl
+    pagename_list, pagename_cnt = list(page2num.keys()), list(page2num.values())
+    pagename_list = list(map(preprocess, pagename_list))
+    # 经过预处理一些url可能已经重合，进行合并
+    pagename_list, pagename_cnt = merge_url(pagename_list, pagename_cnt)
+
+    # 根据url本身做过滤（是否是url、结尾的拓展名、是否在lastword_dict中）
+    index_list = list(map(filter_by_ifurl, pagename_list))
+    print("ratio of is_url: {:2f}%".format(sum(index_list) / len(index_list) * 100)) # 12.61%
+    url_list = [pagename_list[i] for i in range(len(index_list)) if index_list[i]]
+    url_cnt = [pagename_cnt[i] for i in range(len(index_list)) if index_list[i]]
+    print("ratio of is_url in dataset: {:2f}%".format(sum(url_cnt) / sum(pagename_cnt) * 100)) # 84.54%
+
+    # 对url按照/进行分割，建立字典树，绘制字典树的图
+    trie = Trie()
+    for i in range(len(url_list)):
+        cur_split = url_list[i].split("/")
+        cur_split = [cur for cur in cur_split if cur != ""] # 去除空字符串
+        trie.insert_multi(cur_split, [url_cnt[i]] * len(cur_split))
+    g = trie.draw_trie()
+    g.view(filename = 'Trie', directory = 'pre/figures/', cleanup = False)
+
 if __name__ == "__main__":
     # draw_session_pagenum()
     draw_user_sessionnum()
+    # draw_pagenum_distribution()
     pass
     
