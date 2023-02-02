@@ -14,6 +14,7 @@ cur_abs_working_directory = os.path.abspath(
     "/home/{}/Source/deviation-network-fliggy/".format(cur_login_user))  # 设置当前项目的工作目录
 os.chdir(cur_abs_working_directory)
 print("current working directory:", os.getcwd())
+cur_time = '2023-01-20-21-57-52'
 
 sys.path.append("./")
 
@@ -132,8 +133,53 @@ def draw_session_pagenum():
     # feedback_seventh = feedback[feedback['date'] == pd.to_datetime('2023-01-08')]
     # tmp_function(normal_seventh, feedback_seventh)
 
+def draw_user_sessionnum():
+    """绘制每个user的session数目的分布
+    """
+    normal = tmp_prepare_data("normal.csv")
+    feedback = tmp_prepare_data("feedback.csv")
+
+    normal = normal[~normal["session_id"].isin(feedback["session_id"].unique())] # 去除normal中session_id的交集
+    feedback = feedback[~feedback["session_id"].isin(normal["session_id"].unique())] # 去除feedback中session_id的交集
+
+    # 对normal中的session_id进行去重
+    normal = normal.drop_duplicates(subset=['session_id'], keep='first')
+    feedback = feedback.drop_duplicates(subset=['session_id'], keep='first')
+
+    normal_cnt = normal.groupby("user_id")['session_id'].count()
+    feedback_cnt = feedback.groupby("user_id")['session_id'].count()
+
+    drawer = MyDrawer.MyDrawer()
+
+    cdfvalues_list = [
+        normal_cnt.values,
+        feedback_cnt.values,
+    ]
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    drawer.drawMergeCDF(
+        cdfvalues_list,
+        fig_type="frequency",
+        xlabel="# of Sessions of User",
+        ylabel="CDF",
+        color_list=['red', 'blue'],
+        marker_list=['x', 'x'],
+        legend_label_list=['normal', 'feedback'],
+        percentagey=True,
+        reverse=False,
+        xscale="log",
+        fig=fig,
+        ax=ax
+    )
+    ax.grid(True)
+    plt.savefig(
+        f"pre/figures/usernum_frequency-{cur_time}.png", bbox_inches='tight')
+    json.dump(normal_cnt.values.tolist(), open(f"pre/figures/usernum_normal_cnt-{cur_time}.json", "w")) # session中的页面长度
+    json.dump(feedback_cnt.values.tolist(), open(f"pre/figures/usernum_feedback_cnt-{cur_time}.json", "w")) # session中的页面长度
 
 if __name__ == "__main__":
-    draw_session_pagenum()
+    # draw_session_pagenum()
+    draw_user_sessionnum()
     pass
     
