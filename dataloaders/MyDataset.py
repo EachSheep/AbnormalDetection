@@ -24,6 +24,12 @@ class MyDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
+    def normal_num(self):
+        return len(self.normal_idx)
+    
+    def abnormal_num(self):
+        return len(self.outlier_idx)
+
     def __getitem__(self, index):
         sample = {'data': self.data[index], 'label': self.label[index]}
         return sample

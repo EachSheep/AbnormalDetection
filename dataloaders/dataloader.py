@@ -347,6 +347,11 @@ def build_train_dataloader(args, **kwargs):
                           **{"len": train_len, "sid": train_sid, "uid": train_uid})
     test_set = MyDataset(args, test_data, test_label, **
                          {"len": test_len, "sid": test_id, "uid": test_uid})
+    args.train_normal_num = train_set.normal_num()
+    args.train_abnormal_num = train_set.abnormal_num()
+    args.test_normal_num = test_set.normal_num()
+    args.test_abnormal_num = test_set.abnormal_num()
+
     train_loader = DataLoader(
         train_set,
         worker_init_fn=worker_init_fn_seed,

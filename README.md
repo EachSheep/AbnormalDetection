@@ -19,10 +19,10 @@ python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy
                 --vocab_dict_path pre/assets/page2idx.json \
                 --vocab_size 10000 \
                 --embedding_dim 300 \
-                --hidden_dim 512 \
+                --hidden_dim 128 \
                 --lr 0.0002 \
                 --epochs 50 \
-                --batch_size 48
+                --batch_size 128
 ```
 
 ### test
@@ -32,7 +32,7 @@ python test.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
                 --filter_num 10 \
-                --max_seq_len 100 \
+                --max_seq_len 200 \
                 --vocab_dict_path pre/data/page2idx.json
 ```
 

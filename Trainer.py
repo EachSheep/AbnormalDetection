@@ -18,6 +18,8 @@ class Trainer(object):
         self.args = args
         kargs = {'num_workers': args.workers}
         self.train_loader, self.test_loader = build_train_dataloader(args, **kargs)
+        self.train_num = len(self.train_loader.dataset)
+
         self.model = LSTMNet(args) # 定义网络
         self.criterion = build_criterion(args)
         if args.optimizer == "Adam":
@@ -100,20 +102,18 @@ class Trainer(object):
 
         # rscore = recall_score(total_target , total_pred)
         # pscore = precision_score(total_target, total_pred)
-        # print("ROC-AUC: %.4f, PR-AUC: %.4f, RSCORE: %.4f, PSCORE: %.4f." % (roc_auc, pr_auc, rscore, pscore))
 
-        precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.plot(recall, precision)
-        ax.set_xlabel('Recall')
-        ax.set_ylabel('Precision')
-        ax.set_title('PR Curve')
-        figures_dir = os.path.join(self.args.experiment_dir, "figures")
-        plt.savefig(os.path.join(figures_dir, f'pr_curve-valid-{epoch}-{self.args.cur_time}.png'), bbox_inches='tight')
+        # precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
+        # fig = plt.figure()
+        # ax = fig.add_subplot(111)
+        # ax.plot(recall, precision)
+        # ax.set_xlabel('Recall')
+        # ax.set_ylabel('Precision')
+        # ax.set_title('PR Curve')
+        # figures_dir = os.path.join(self.args.experiment_dir, "figures")
+        # plt.savefig(os.path.join(figures_dir, f'pr_curve-valid-{epoch}-{self.args.cur_time}.png'), bbox_inches='tight')
 
-        return roc_auc, pr_auc, cur_epoch_loss
-        # return roc_auc, pr_auc, rscore, pscore, cur_epoch_loss
+        return roc_auc, pr_auc, cur_epoch_loss, total_target, total_pred
 
     def save_weights(self, filename = None):
         model_dir = os.path.join(self.args.experiment_dir, 'models')
