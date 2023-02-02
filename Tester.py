@@ -67,7 +67,8 @@ class Tester(object):
         ax.set_xlabel('Recall')
         ax.set_ylabel('Precision')
         ax.set_title('PR Curve')
-        plt.savefig(os.path.join(self.args.experiment_dir, "figures", f'pr_curve-{self.args.cur_time}.png'), bbox_inches='tight')
+        figures_dir = os.path.join(self.args.experiment_dir, "figures")
+        plt.savefig(os.path.join(figures_dir, f'pr_curve-test-{self.args.cur_time}.png'), bbox_inches='tight')
         
         # rscore = recall_score(total_target , total_pred)
         # pscore = precision_score(total_target, total_pred)

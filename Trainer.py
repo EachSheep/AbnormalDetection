@@ -2,6 +2,7 @@ import os
 import numpy as np
 import torch
 from tqdm import tqdm
+import time
 
 from dataloaders.dataloader import build_train_dataloader
 from model.lstmnet import LSTMNet
@@ -9,6 +10,7 @@ from model.criterion import build_criterion
 
 from sklearn.metrics import average_precision_score, roc_auc_score, recall_score, precision_score
 from sklearn.metrics import precision_recall_curve, roc_curve
+import matplotlib.pyplot as plt
 
 class Trainer(object):
 
@@ -34,6 +36,8 @@ class Trainer(object):
         """训练一个epoch
         Args:
             epoch (int): 当前epoch
+        Returns:
+            cur_epoch_loss (float): 当前epoch的loss
         """
         self.model.train()
 
@@ -58,9 +62,15 @@ class Trainer(object):
         cur_epoch_loss = train_loss / (i + 1)
         return cur_epoch_loss
 
-    def eval(self):
+    def eval(self, epoch):
         """测试一个args.steps_per_epoch个batch的数据
         异常检测更加关注异常样本的检测情况，这里主要关注PR曲线，即精确度和召回率。
+        Args:
+            epoch (int): 当前epoch
+        Returns:
+            roc_auc (float): 当前epoch的roc_auc
+            pr_auc (float): 当前epoch的pr_auc
+            cur_epoch_loss (float): 当前epoch的loss
         """
         self.model.eval()
 
@@ -92,11 +102,24 @@ class Trainer(object):
         # pscore = precision_score(total_target, total_pred)
         # print("ROC-AUC: %.4f, PR-AUC: %.4f, RSCORE: %.4f, PSCORE: %.4f." % (roc_auc, pr_auc, rscore, pscore))
 
+        precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(recall, precision)
+        ax.set_xlabel('Recall')
+        ax.set_ylabel('Precision')
+        ax.set_title('PR Curve')
+        figures_dir = os.path.join(self.args.experiment_dir, "figures")
+        plt.savefig(os.path.join(figures_dir, f'pr_curve-valid-{epoch}-{self.args.cur_time}.png'), bbox_inches='tight')
+
         return roc_auc, pr_auc, cur_epoch_loss
         # return roc_auc, pr_auc, rscore, pscore, cur_epoch_loss
 
     def save_weights(self, filename = None):
+        model_dir = os.path.join(self.args.experiment_dir, 'models')
+        if os.path.exists(model_dir) == False:
+            os.makedirs(model_dir)
         if filename == None:
-            torch.save(self.model.state_dict(), os.path.join(self.args.experiment_dir, 'models', self.args.weight_name))
+            torch.save(self.model.state_dict(), os.path.join(model_dir, self.args.weight_name))
         else:
-            torch.save(self.model.state_dict(), os.path.join(self.args.experiment_dir, 'models', filename))
+            torch.save(self.model.state_dict(), os.path.join(model_dir, filename))

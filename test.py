@@ -13,7 +13,8 @@ if __name__ == '__main__':
 
     tester = Tester(args)
 
-    model_path = os.path.join(args.experiment_dir, 'models', 'model-2023-01-20-21-57-52.pkl')
+    model_dir = os.path.join(args.experiment_dir, 'models')
+    model_path = os.path.join(model_dir, 'model-2023-01-20-21-57-52.pkl')
     roc_auc, pr_auc, test_loss = tester.eval(state_dict_path = model_path)
     print("AUC-ROC: %.4f, AUC-PR: %.4f, test_loss: %.4f" % (roc_auc, pr_auc, test_loss))
 

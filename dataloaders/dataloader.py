@@ -51,7 +51,8 @@ def prepare_normal_data(args, **kwargs):
     df_normal = df_normal[~df_normal["session_id"].isin(df_abnormal["session_id"].unique())]
 
     # 去除normal中的nan
-    df_normal = df_normal.dropna(subset=['page_name'])
+    # df_normal = df_normal.dropna(subset=['page_name'])
+    df_normal = df_normal.dropna()
 
     # 然后对数据中的page_name进行清洗
     df_normal['page_name'] = df_normal['page_name'].map(preprocess)
@@ -152,7 +153,8 @@ def prepare_abnormal_data(args, **kwargs):
     print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))
 
     # 去除normal中的nan
-    df_abnormal = df_abnormal.dropna(subset=['page_name'])
+    # df_abnormal = df_abnormal.dropna(subset=['page_name'])
+    df_abnormal = df_abnormal.dropna()
 
     # 然后对数据中的page_name进行清洗
     df_abnormal['page_name'] = df_abnormal['page_name'].map(preprocess)

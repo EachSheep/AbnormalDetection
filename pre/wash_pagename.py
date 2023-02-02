@@ -1,6 +1,4 @@
-"""设置一系列规则对页面进行清洗
-生成字典时候的清洗
-跑模型时候的清洗
+"""对page_num进行清洗
 """
 import json
 import re
@@ -9,7 +7,7 @@ import os
 
 
 def preprocess(url):
-    """预处理，生成字典时候和跑模型时候都要用到
+    """预处理
     Args:
         url (str): 待处理的url
     Returns:
@@ -20,14 +18,13 @@ def preprocess(url):
     url = url.lower()  # 大写变小写
     # 去除url中的汉字, 去除所有的url中文编码, 去除所有逗号, 去除所有~
     url = re.sub(r'[\u4e00-\u9fa5]|%[a-f\d]{2}|~|,', '', url)
-    url = re.sub(r'/+$', '', url)  # 末尾不能以/结尾
-
     # "https://m.amap.com/navigation/carmap/&saddr=121.834638%2c29.847424%2c%e6%88%91%e7%9a%84%e4%bd%8d%e7%bd%ae&daddr=121.51234007%2c29.84995423%2c%e5%ae%81%e6%b3%a2%e5%ae%a2%e8%bf%90%e4%b8%ad%e5%bf%83%e5%9c%b0%e9%93%81%e7%ab%99c%e5%8f%a3"
     # 类似这样的url变成：https://m.amap.com/navigation/carmap/&saddr=daddr=
     if '=' in url:  # =到下一个&，或者=到最后的字符去除
         url = re.sub(r'=.*&|=.*$', '=', url)
     if len(url) > 0 and url[-1] == '=':
         url = url[:-1]
+    url = re.sub(r'/+$', '', url)  # 末尾不能以/结尾
     return url
 
 
@@ -47,7 +44,7 @@ def merge_url(url_list, url_num):
 
 
 def filter_by_ifurl(url):
-    """根据是否是url过滤, 生成字典时候要用到
+    """根据是否是url过滤
     Args:
         url (str): 待过滤的url
     Returns:
@@ -64,14 +61,14 @@ extension_of_filename = set([extension.lower() for extension in json.load(
 
 
 def filter_by_extension(url):
-    """根据拓展名过滤url, 生成字典时候要用到
+    """根据拓展名过滤url
     Args:
         url (str): 待过滤的url
     Returns:
         filter_or_not (bool) : 是否被过滤掉，是为True, 否为False
     """
-    # extension_in_url = url.split('.')[-1]
-    extension_in_url = re.search(r'[^a-zA-Z0-9]([a-zA-Z0-9_]+)$', url)
+    new_url = url.split('/')[-1]
+    extension_in_url = re.search(r'[^a-zA-Z0-9]([a-zA-Z0-9_]+)$', new_url)
     if extension_in_url and extension_in_url.group()[1:] in extension_of_filename:
         return True
     else:
@@ -159,25 +156,25 @@ def filter_by_url_frequency(url_list, url_num):
     Returns:
         index_list (list): 安全的url的索引
     """
-    if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/')):
-        os.makedirs(os.path.join(os.path.dirname(__file__), 'assets/'))
-    if not os.path.exists('pre/assets/freq_url_dict.json'):
-        with open(os.path.join(os.path.dirname(__file__), 'assets/freq_url_dict.json'), 'w') as f:
+    assets_dir = os.path.join(os.path.dirname(__file__), 'assets/')
+    if not os.path.exists(assets_dir):
+        os.makedirs(assets_dir)
+    freq_url_path = os.path.join(assets_dir, 'freq_url_dict.json')
+    if not os.path.exists(freq_url_path):
+        with open(freq_url_path, 'w') as f:
             json.dump({}, f)
 
     url_dict = [url_list[i]
                 for i in range(len(url_list)) if url_num[i] >= 10]  # 筛选出出现次数多的url
 
     # 读取freq_dict
-    freq_url_dict = json.load(
-        open(os.path.join(os.path.dirname(__file__), 'assets/freq_url_dict.json'), 'r'))
+    freq_url_dict = json.load(open(freq_url_path, 'r'))
     freq_url_dict = [cur_url.lower() for cur_url in freq_url_dict]
     freq_url_dict = freq_url_dict + url_dict
     freq_url_dict = sorted(set(freq_url_dict), key=freq_url_dict.index)  # 稳定去重
     if len(freq_url_dict) > 10000:
         freq_url_dict = freq_url_dict[-10000:]
-    json.dump(freq_url_dict, open(os.path.join(os.path.dirname(__file__), 'assets/freq_url_dict.json'), 'w'),
-              indent=4)  # 更新词典至文件
+    json.dump(freq_url_dict, open(freq_url_path, 'w'), indent=4)  # 更新词典至文件
 
     index_list = np.array(  # 以词典中的词结尾的url为安全url
         [True if cur_url in freq_url_dict else False for cur_url in url_list])
@@ -195,15 +192,17 @@ def filter_by_lastword_frequency(url_list, url_num):
     Returns:
         index_list (list): 安全的url的索引
     """
-    if not os.path.exists(os.path.join(os.path.dirname(__file__), 'assets/')):
-        os.makedirs(os.path.join(os.path.dirname(__file__), 'assets/'))
-    if not os.path.exists('pre/assets/freq_lastword_dict.json'):
-        with open(os.path.join(os.path.dirname(__file__), 'assets/freq_lastword_dict.json'), 'w') as f:
+    assets_dir = os.path.join(os.path.dirname(__file__), 'assets/')
+    if not os.path.exists(assets_dir):
+        os.makedirs(assets_dir)
+    freq_lastword_path = os.path.join(assets_dir, 'freq_lastword_dict.json')
+    if not os.path.exists(freq_lastword_path):
+        with open(freq_lastword_path, 'w') as f:
             json.dump({}, f)
 
     url_lastword_list = [
-        re.search(r'[^a-zA-Z0-9]([a-zA-Z0-9_]+)$', url).group()[1:]
-        if re.search(r'[^a-zA-Z0-9]([a-zA-Z0-9_]+)$', url) else url
+        re.search(r'[^a-zA-Z0-9_]([a-zA-Z0-9_]*)$', url).group()[1:]
+        if re.search(r'[^a-zA-Z0-9_]([a-zA-Z0-9_]*)$', url) else url
         for url in url_list
     ]  # 按照最后一个词的频率生成词典
     url_lastword = {}  # 统计最后一个词的频率
@@ -215,19 +214,19 @@ def filter_by_lastword_frequency(url_list, url_num):
                 for word in url_lastword if word[1] >= 10]  # 筛选出出现次数多的词
 
     # 读取freq_dict
-    freq_lastword_dict = json.load(open(os.path.join(
-        os.path.dirname(__file__), 'assets/freq_lastword_dict.json'), 'r'))
+    freq_lastword_dict = json.load(open(freq_lastword_path, 'r'))
     freq_lastword_dict = [word.lower() for word in freq_lastword_dict]
     freq_lastword_dict = freq_lastword_dict + url_dict
     freq_lastword_dict = sorted(
         set(freq_lastword_dict), key=freq_lastword_dict.index)  # 稳定去重
     if len(freq_lastword_dict) > 10000:
         freq_lastword_dict = freq_lastword_dict[-10000:]
-    json.dump(freq_lastword_dict, open(os.path.join(os.path.dirname(__file__), 'assets/freq_lastword_dict.json'), 'w'),
-              indent=4)  # 更新词典至文件
+    json.dump(freq_lastword_dict, open(
+        freq_lastword_path, 'w'), indent=4)  # 更新词典至文件
 
+    freq_lastword_set = set(freq_lastword_dict)
     index_list = np.array(  # 以词典中的词结尾的url为安全url
-        [True if word in freq_lastword_dict else False for word in url_lastword_list])
+        [True if word in freq_lastword_set else False for word in url_lastword_list])
 
     return index_list
 
