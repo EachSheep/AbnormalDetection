@@ -221,4 +221,4 @@ if __name__ == "__main__":
     json.dump(washfailed_dict, open(
         'pre/data/page2num_failedwash.json', 'w'), indent=4)
 
-    # encode_page(pagename_cnt_path='pre/data/page2num_afterwash.json')
+    encode_page(pagename_cnt_path='pre/data/page2num_afterwash.json')
