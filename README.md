@@ -11,7 +11,7 @@ Or follow instructions in requirements.txt to install.
 ### train 
 
 ```bash
-python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/datasets/ \
+python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/ \
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
                 --min_seq_len 10 \
@@ -28,7 +28,7 @@ python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy
 ### test
 
 ```bash
-python test.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/datasets/ \
+python test.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/ \
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
                 --min_seq_len 10 \

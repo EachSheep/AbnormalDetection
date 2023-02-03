@@ -39,40 +39,6 @@ def prepare_normal_data(args, **kwargs):
     df_normal.rename(columns={"index": "unique_id"}, inplace=True)
     print('正常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_normal))
 
-
-    # 首先去掉和feedback数据交叉的部分，这部分是，特殊代码，不通用
-    abnormal_data_path = os.path.join(
-        args.dataset_root, args.file_name_abnormal)
-    df_abnormal = pd.read_csv(abnormal_data_path)
-    df_abnormal["date_time"] = pd.to_datetime(df_abnormal.date_time)
-    df_abnormal = df_abnormal.reset_index()
-    df_abnormal.rename(columns={"index": "unique_id"}, inplace=True)
-    print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))
-    # 去除normal中session_id的交集
-    df_normal = df_normal[~df_normal["session_id"].isin(df_abnormal["session_id"].unique())]
-
-    # 去除normal中的nan
-    # df_normal = df_normal.dropna(subset=['page_name'])
-    df_normal = df_normal.dropna()
-
-    # 然后对数据中的page_name进行清洗
-    df_normal['page_name'] = df_normal['page_name'].map(preprocess)
-    # 先给不是url、在extension_of_filename中，在lastword_dict、freq_lastword_dict中的的数据打上标签
-    df_normal['is_ok'] = df_normal['page_name'].map(filter_by_url)
-    # 给在freq_url_dict中的数据打上标签
-    df_normal['is_ok'] = df_normal['is_ok'] + df_normal['page_name'].map(filter_by_freq_url)
-    # 给is_ok == False的page_name做一次process_by_force的操作
-    df_nomral_no_process = df_normal[df_normal['is_ok'] == True]
-    df_normal_need_process = df_normal[df_normal['is_ok'] == False]
-    df_normal_need_process.loc[:, ['page_name']] = df_normal_need_process['page_name'].map(process_by_force)
-    df_normal = pd.concat([df_nomral_no_process, df_normal_need_process])
-    
-    # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。
-    df_normal_cnt = df_normal.groupby("session_id")['unique_id'].count()
-    df_normal_larger_id = df_normal_cnt[df_normal_cnt >= args.min_seq_len]
-    df_normal = df_normal[df_normal['session_id'].isin(
-        df_normal_larger_id.index)]
-
     # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]
     unknown_page_name = []
     unknown_page_len = []
@@ -152,29 +118,6 @@ def prepare_abnormal_data(args, **kwargs):
     df_abnormal = df_abnormal.reset_index()
     df_abnormal.rename(columns={"index": "unique_id"}, inplace=True)
     print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))
-
-    # 去除normal中的nan
-    # df_abnormal = df_abnormal.dropna(subset=['page_name'])
-    df_abnormal = df_abnormal.dropna()
-
-    # 然后对数据中的page_name进行清洗
-    df_abnormal['page_name'] = df_abnormal['page_name'].map(preprocess)
-    # 先给不是url、在extension_of_filename中，在lastword_dict、freq_lastword_dict中的的数据打上标签
-    df_abnormal['is_ok'] = df_abnormal['page_name'].map(filter_by_url)
-    # 给在freq_url_dict中的数据打上标签
-    df_abnormal['is_ok'] = df_abnormal['is_ok'] + df_abnormal['page_name'].map(filter_by_freq_url)
-    # 给is_ok == False的page_name做一次process_by_force的操作
-    df_abnomral_no_process = df_abnormal[df_abnormal['is_ok'] == True]
-    df_abnormal_need_process = df_abnormal[df_abnormal['is_ok'] == False]
-    df_abnormal_need_process.loc[:, ['page_name']] = df_abnormal_need_process['page_name'].map(process_by_force)
-    df_abnormal = pd.concat([df_abnomral_no_process, df_abnormal_need_process])
-
-    # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。
-    df_abnormal_cnt = df_abnormal.groupby("session_id")['unique_id'].count()
-    df_abnormal_larger_id = df_abnormal_cnt[df_abnormal_cnt >= args.min_seq_len]
-    df_abnormal = df_abnormal[df_abnormal['session_id'].isin(
-        df_abnormal_larger_id.index)]
-    print('异常用户：根据session中的页面筛选后用户的轨迹数为：', len(df_abnormal))
 
     # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]
     unknown_page_name = []

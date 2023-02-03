@@ -1,9 +1,4 @@
-data/*
-experiment/*
-jsons/*
-figures/*
-models/*
-
+experiment/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

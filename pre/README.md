@@ -23,7 +23,7 @@ python encode_page.py -page2num_dir ../data/ \
 ## run draw.py
 
 ```bash
-python draw.py -in_dir ../data/datasets/ \
+python draw.py -in_dir ../data/ \
                -feedback_names feedback.csv  \
                -normal_names normal.csv
 ```
