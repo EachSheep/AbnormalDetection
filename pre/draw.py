@@ -3,61 +3,43 @@
 import os
 import matplotlib.pyplot as plt
 import pandas as pd
-import argparse
-import time
-import sys
 import json
 
-cur_login_user = os.getlogin()
-cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
-cur_abs_working_directory = os.path.abspath(
-    "/home/{}/Source/deviation-network-fliggy/".format(cur_login_user))  # 设置当前项目的工作目录
-os.chdir(cur_abs_working_directory)
-print("current working directory:", os.getcwd())
-cur_time = '2023-01-20-21-57-52'
+from pre_argparser import pre_args
+import utils.MyDrawer as MyDrawer
+from utils.MyTrie import Trie
+from PreProcesser import preprocess
+from wash_pagename import merge_url, filter_by_ifurl
 
-sys.path.append("./")
-
-import pre.utils.MyDrawer as MyDrawer
-from pre.utils.MyTrie import Trie
-
-parser = argparse.ArgumentParser(description='data_sniff')
-parser.add_argument('-infile_directory', type=str,
-                    default="data/datasets/", help='input file directory')
-args = parser.parse_args()
-
-def tmp_prepare_data(file_name: str):
-    normal_data_path = os.path.join(args.infile_directory, file_name)
+def tmp_prepare_data(in_dir, file_name):
+    normal_data_path = os.path.join(in_dir, file_name)
     df = pd.read_csv(normal_data_path)
     df["date_time"] = pd.to_datetime(df["date_time"])
     df = df.reset_index()
     df.rename(columns={"index": "unique_id"}, inplace=True)
-
     return df
 
-def draw_session_pagenum():
+def draw_session_pagenum(in_dir, normal_name, feedback_name):
     """绘制每个session的页面数目的分布，使用一周的数据
     注意：下面的代码只对每次读取一天的数据有意义，如果读取多天的数据，需要修改代码
+    Args:
+        in_dir (str): 输入文件的目录
+        normal_name (str): 正常文件的名字
+        feedback_name (str): 反馈文件的名字
+    Returns:
+        None
     """
-    normal = tmp_prepare_data("normal.csv")
-    feedback = tmp_prepare_data("feedback.csv")
-    # all = pd.concat([normal, feedback], axis=0).drop(columns=['unique_id']).reset_index(drop=True).reset_index().rename(columns={"index": "unique_id"})
-
-    # 去除normal中session_id的交集
-    normal = normal[~normal["session_id"].isin(feedback["session_id"].unique())]
-    # 去除feedback中session_id的交集
-    feedback = feedback[~feedback["session_id"].isin(normal["session_id"].unique())]
+    normal = tmp_prepare_data(in_dir, normal_name)
+    feedback = tmp_prepare_data(in_dir, feedback_name)
 
     normal_cnt = normal.groupby("session_id")['unique_id'].count()
     feedback_cnt = feedback.groupby("session_id")['unique_id'].count()
-    # all_cnt = all.groupby("session_id")['unique_id'].count()
 
     drawer = MyDrawer.MyDrawer()
 
     cdfvalues_list = [
         normal_cnt.values,
         feedback_cnt.values,
-        # all_cnt.values,
     ]
 
     fig = plt.figure()
@@ -67,9 +49,9 @@ def draw_session_pagenum():
         fig_type="frequency",
         xlabel="# of Pages of Session",
         ylabel="CDF",
-        color_list=['red', 'blue', 'purple'],
-        marker_list=['x', 'x', 'x', 'x'],
-        legend_label_list=['normal', 'feedback', 'all'],
+        color_list=['red', 'blue'],
+        marker_list=['x', 'x'],
+        legend_label_list=['normal', 'feedback'],
         percentagey=True,
         reverse=False,
         xscale="log",
@@ -78,10 +60,9 @@ def draw_session_pagenum():
     )
     ax.grid(True)
     plt.savefig(
-        "pre/figures/sessionnum_frequency-{}.png".format(cur_time), bbox_inches='tight')
-    json.dump(list(normal_cnt.values), open("pre/figures/normal_cnt-{}.json".format(cur_time), "w")) # session中的页面长度
-    json.dump(list(feedback_cnt.values), open("pre/figures/feedback_cnt-{}.json".format(cur_time), "w")) # session中的页面长度
-    # json.dump(list(all_cnt.values), open("pre/figures/all_cnt-{}.json".format(cur_time), "w")) # session中的页面长度
+        "../experiment/figures/sessionnum_frequency.png", bbox_inches='tight')
+    json.dump(normal_cnt.values.tolist(), open("../experiment/figures/normal_cnt.json", "w"), indent = 4) # session中的页面长度
+    json.dump(feedback_cnt.values.tolist(), open("../experiment/figures/feedback_cnt.json", "w"), indent = 4)
 
     def tmp_function(normal, feedback):
         """做一些简单的数据统计
@@ -134,19 +115,21 @@ def draw_session_pagenum():
     # feedback_seventh = feedback[feedback['date'] == pd.to_datetime('2023-01-08')]
     # tmp_function(normal_seventh, feedback_seventh)
 
-def draw_user_sessionnum():
+def draw_user_sessionnum(in_dir, normal_name, feedback_name):
     """绘制每个user的session数目的分布
+    Args:
+        in_dir (str): 输入文件夹
+        normal_name (str): normal的文件名
+        feedback_name (str): feedback的文件名
+    Returns:
+        None
     """
-    normal = tmp_prepare_data("normal.csv")
-    feedback = tmp_prepare_data("feedback.csv")
-
-    normal = normal[~normal["session_id"].isin(feedback["session_id"].unique())] # 去除normal中session_id的交集
-    feedback = feedback[~feedback["session_id"].isin(normal["session_id"].unique())] # 去除feedback中session_id的交集
+    normal = tmp_prepare_data(in_dir, normal_name)
+    feedback = tmp_prepare_data(in_dir, feedback_name)
 
     # 对normal中的session_id进行去重
     normal = normal.drop_duplicates(subset=['session_id'], keep='first')
     feedback = feedback.drop_duplicates(subset=['session_id'], keep='first')
-
     normal_cnt = normal.groupby("user_id")['session_id'].count()
     feedback_cnt = feedback.groupby("user_id")['session_id'].count()
 
@@ -162,7 +145,7 @@ def draw_user_sessionnum():
     drawer.drawMergeCDF(
         cdfvalues_list,
         fig_type="frequency",
-        xlabel="# of Sessions of User",
+        xlabel="# of Sessions of a User",
         ylabel="CDF",
         color_list=['red', 'blue'],
         marker_list=['x', 'x'],
@@ -175,16 +158,17 @@ def draw_user_sessionnum():
     )
     ax.grid(True)
     plt.savefig(
-        f"pre/figures/usernum_frequency-{cur_time}.png", bbox_inches='tight')
-    json.dump(normal_cnt.values.tolist(), open(f"pre/figures/usernum_normal_cnt-{cur_time}.json", "w")) # session中的页面长度
-    json.dump(feedback_cnt.values.tolist(), open(f"pre/figures/usernum_feedback_cnt-{cur_time}.json", "w")) # session中的页面长度
+        "../experiment/figures/usernum_frequency.png", bbox_inches='tight')
+    # json.dump(normal_cnt.values.tolist(), open("../experiment/figures/usernum_normal_cnt.json", "w"))
+    # json.dump(feedback_cnt.values.tolist(), open("../experiment/figures/usernum_feedback_cnt.json", "w")) # session中的页面长度
 
-def draw_pagenum_distribution():
-    """根据data/page2num-origin.csv绘制页面的分布
+def draw_pagenum_distribution(data_path):
+    """根据data/page2num-1.csv绘制页面的分布
+    Args:
+        data_path (str): page2num-1.json的路径
     """
     drawer = MyDrawer.MyDrawer()
 
-    data_path = "pre/data/page2num-origin-2023-01-20-21-57-52.json"
     page2num = json.load(open(data_path, "r"))
     page2num_list = sorted(page2num.items(), key=lambda x: x[1], reverse=True)
 
@@ -206,10 +190,9 @@ def draw_pagenum_distribution():
         ax=ax,
     )
     plt.savefig(
-        f"pre/figures/pagenum_distribution-{cur_time}.png", bbox_inches='tight')
+        "../experiment/figures/pagenum_distribution.png", bbox_inches='tight')
     
     # 多少是url，多少不是url
-    from wash_pagename import preprocess, merge_url, filter_by_ifurl
     pagename_list, pagename_cnt = list(page2num.keys()), list(page2num.values())
     pagename_list = list(map(preprocess, pagename_list))
     # 经过预处理一些url可能已经重合，进行合并
@@ -217,7 +200,7 @@ def draw_pagenum_distribution():
 
     # 根据url本身做过滤（是否是url、结尾的拓展名、是否在lastword_dict中）
     index_list = list(map(filter_by_ifurl, pagename_list))
-    print("ratio of is_url: {:2f}%".format(sum(index_list) / len(index_list) * 100)) # 12.61%
+    print("ratio of is_url: {:2f}%".format(sum(index_list) / len(index_list) * 100)) # 12.28%
     url_list = [pagename_list[i] for i in range(len(index_list)) if index_list[i]]
     url_cnt = [pagename_cnt[i] for i in range(len(index_list)) if index_list[i]]
     print("ratio of is_url in dataset: {:2f}%".format(sum(url_cnt) / sum(pagename_cnt) * 100)) # 84.54%
@@ -229,11 +212,15 @@ def draw_pagenum_distribution():
         cur_split = [cur for cur in cur_split if cur != ""] # 去除空字符串
         trie.insert_multi(cur_split, [url_cnt[i]] * len(cur_split))
     g = trie.draw_trie()
-    g.view(filename = 'Trie', directory = 'pre/figures/', cleanup = False)
+    g.view(filename = 'Trie', directory = '../experiment/figures/', cleanup = False)
 
 if __name__ == "__main__":
-    # draw_session_pagenum()
-    draw_user_sessionnum()
-    # draw_pagenum_distribution()
+    # in_dir, normal_name, feedback_name = pre_args.in_dir, pre_args.normal_names[0], pre_args.feedback_names[0]
+    # draw_session_pagenum(in_dir, normal_name, feedback_name)
+    # in_dir, normal_name, feedback_name = pre_args.in_dir, pre_args.normal_names[0], pre_args.feedback_names[0]
+    # draw_user_sessionnum(in_dir, normal_name, feedback_name)
+
+    data_path = "../data/page2num-1.json"
+    draw_pagenum_distribution(data_path)
     pass
     
