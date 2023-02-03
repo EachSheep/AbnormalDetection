@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from dataloaders.MyDataset import MyDataset
 from dataloaders.utlis import worker_init_fn_seed, BalancedBatchSampler, RandomedBatchSampler
 from pre.wash_pagename import *
+from pre.PreProcesser import preprocess
 
 
 def prepare_normal_data(args, **kwargs):
@@ -68,7 +69,7 @@ def prepare_normal_data(args, **kwargs):
     
     # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。
     df_normal_cnt = df_normal.groupby("session_id")['unique_id'].count()
-    df_normal_larger_id = df_normal_cnt[df_normal_cnt >= args.filter_num]
+    df_normal_larger_id = df_normal_cnt[df_normal_cnt >= args.min_seq_len]
     df_normal = df_normal[df_normal['session_id'].isin(
         df_normal_larger_id.index)]
 
@@ -170,7 +171,7 @@ def prepare_abnormal_data(args, **kwargs):
 
     # 根据sessuion中页面数的CDF图，根据这个图决定筛掉用户轨迹小于多少的用户数据。
     df_abnormal_cnt = df_abnormal.groupby("session_id")['unique_id'].count()
-    df_abnormal_larger_id = df_abnormal_cnt[df_abnormal_cnt >= args.filter_num]
+    df_abnormal_larger_id = df_abnormal_cnt[df_abnormal_cnt >= args.min_seq_len]
     df_abnormal = df_abnormal[df_abnormal['session_id'].isin(
         df_abnormal_larger_id.index)]
     print('异常用户：根据session中的页面筛选后用户的轨迹数为：', len(df_abnormal))

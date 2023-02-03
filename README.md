@@ -14,7 +14,7 @@ Or follow instructions in requirements.txt to install.
 python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/datasets/ \
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
-                --filter_num 10 \
+                --min_seq_len 10 \
                 --max_seq_len 200 \
                 --vocab_dict_path pre/assets/page2idx.json \
                 --vocab_size 10000 \
@@ -31,7 +31,7 @@ python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy
 python test.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/datasets/ \
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
-                --filter_num 10 \
+                --min_seq_len 10 \
                 --max_seq_len 200 \
                 --vocab_dict_path pre/data/page2idx.json > experiment/log.txt
 ```
