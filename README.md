@@ -22,7 +22,7 @@ python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy
                 --hidden_dim 128 \
                 --lr 0.0002 \
                 --epochs 50 \
-                --batch_size 128
+                --batch_size 128 > experiment/log.txt
 ```
 
 ### test
@@ -33,7 +33,7 @@ python test.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 --file_name_normal normal.csv \
                 --filter_num 10 \
                 --max_seq_len 200 \
-                --vocab_dict_path pre/data/page2idx.json
+                --vocab_dict_path pre/data/page2idx.json > experiment/log.txt
 ```
 
 ## Reference
