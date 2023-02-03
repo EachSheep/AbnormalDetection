@@ -22,14 +22,13 @@ parser.add_argument('--no_cuda', action='store_true',
 parser.add_argument('--root', type=str,
                     default='./', help="project root")  # 项目根目录
 parser.add_argument('--dataset_root', type=str,
-                    default='./data/datasets/', help="dataset root")  # 数据集存放的根目录
+                    default='./data/preprocess/', help="dataset root")  # 数据集存放的根目录
 parser.add_argument('--file_name_abnormal', type=str, default='feedback.csv',
                     help="anomaly file name")  # 异常数据文件名，也就是feedback用户的行为轨迹
 parser.add_argument('--file_name_normal', type=str, default='normal.csv',
                     help="normal file name")  # 正常数据文件名，也就是normal用户的行为轨迹
-parser.add_argument('--vocab_dict_path', type=str, default='pre/assets/page2idx.json',
+parser.add_argument('--vocab_dict_path', type=str, default='data/assets/page2idx.json',
                     help="vocab dict path")  # 页面->id的字典存放路径
-parser.add_argument('--min_seq_len', type=float, default=10, help="filter num")  # 筛除用户行为轨迹中出现次数少于filter_num的session
 parser.add_argument('--max_seq_len', type=int, default=200,
                     help="vocab dict path")  # 页面->id的字典存放路径
 parser.add_argument('--train_ratio', type=float, default=0.8,

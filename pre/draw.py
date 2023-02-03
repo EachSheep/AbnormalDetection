@@ -4,12 +4,10 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import json
+import re
 
-from pre_argparser import pre_args
 import utils.MyDrawer as MyDrawer
 from utils.MyTrie import Trie
-from PreProcesser import preprocess
-from wash_pagename import merge_url, filter_by_ifurl
 
 def tmp_prepare_data(in_dir, file_name):
     normal_data_path = os.path.join(in_dir, file_name)
@@ -162,6 +160,18 @@ def draw_user_sessionnum(in_dir, normal_name, feedback_name):
     # json.dump(normal_cnt.values.tolist(), open("../experiment/figures/usernum_normal_cnt.json", "w"))
     # json.dump(feedback_cnt.values.tolist(), open("../experiment/figures/usernum_feedback_cnt.json", "w")) # session中的页面长度
 
+def filter_by_ifurl(url):
+    """根据是否是url过滤
+    Args:
+        url (str): 待过滤的url
+    Returns:
+        filter_or_not (bool) : 是否被过滤掉，是为True, 否为False
+    """
+    if re.match(r'^https?:\/\/', url):
+        return False
+    else:
+        return True
+
 def draw_pagenum_distribution(data_path):
     """根据data/page2num-1.csv绘制页面的分布
     Args:
@@ -194,13 +204,10 @@ def draw_pagenum_distribution(data_path):
     
     # 多少是url，多少不是url
     pagename_list, pagename_cnt = list(page2num.keys()), list(page2num.values())
-    pagename_list = list(map(preprocess, pagename_list))
-    # 经过预处理一些url可能已经重合，进行合并
-    pagename_list, pagename_cnt = merge_url(pagename_list, pagename_cnt)
 
     # 根据url本身做过滤（是否是url、结尾的拓展名、是否在lastword_dict中）
     index_list = list(map(filter_by_ifurl, pagename_list))
-    print("ratio of is_url: {:2f}%".format(sum(index_list) / len(index_list) * 100)) # 12.28%
+    print("ratio of is_url: {:2f}%".format(sum(index_list) / len(index_list) * 100)) # 13.28%
     url_list = [pagename_list[i] for i in range(len(index_list)) if index_list[i]]
     url_cnt = [pagename_cnt[i] for i in range(len(index_list)) if index_list[i]]
     print("ratio of is_url in dataset: {:2f}%".format(sum(url_cnt) / sum(pagename_cnt) * 100)) # 84.54%
@@ -220,7 +227,7 @@ if __name__ == "__main__":
     # in_dir, normal_name, feedback_name = pre_args.in_dir, pre_args.normal_names[0], pre_args.feedback_names[0]
     # draw_user_sessionnum(in_dir, normal_name, feedback_name)
 
-    data_path = "../data/page2num-1.json"
-    draw_pagenum_distribution(data_path)
+    # data_path = "../data/page2nums/page2num-1.json"
+    # draw_pagenum_distribution(data_path)
     pass
     

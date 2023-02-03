@@ -10,19 +10,21 @@ Or follow instructions in requirements.txt to install.
 
 ### train 
 
+训练的时候
+
 ```bash
-python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/ \
+python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
-                --min_seq_len 10 \
                 --max_seq_len 200 \
-                --vocab_dict_path pre/assets/page2idx.json \
+                --vocab_dict_path data/assets/page2idx.json \
                 --vocab_size 10000 \
                 --embedding_dim 300 \
                 --hidden_dim 128 \
                 --lr 0.0002 \
                 --epochs 50 \
-                --batch_size 128 > experiment/log.txt
+                --batch_size 128 \
+                > experiment/log.txt
 ```
 
 ### test

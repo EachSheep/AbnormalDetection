@@ -10,9 +10,14 @@ from torch.utils.data import DataLoader
 
 from dataloaders.MyDataset import MyDataset
 from dataloaders.utlis import worker_init_fn_seed, BalancedBatchSampler, RandomedBatchSampler
-from pre.wash_pagename import *
-from pre.PreProcesser import preprocess
 
+def tmp_prepare_data(in_dir, file_name):
+    normal_data_path = os.path.join(in_dir, file_name)
+    df = pd.read_csv(normal_data_path)
+    df["date_time"] = pd.to_datetime(df["date_time"])
+    df = df.reset_index()
+    df.rename(columns={"index": "unique_id"}, inplace=True)
+    return df
 
 def prepare_normal_data(args, **kwargs):
     """载入正常数据
@@ -32,11 +37,7 @@ def prepare_normal_data(args, **kwargs):
     page2id = json.load(open(args.vocab_dict_path, 'r'))
     max_seq_len = args.max_seq_len + 1  # +1是<eos>的位置
 
-    normal_data_path = os.path.join(args.dataset_root, args.file_name_normal) # 载入数据
-    df_normal = pd.read_csv(normal_data_path)
-    df_normal["date_time"] = pd.to_datetime(df_normal.date_time)
-    df_normal = df_normal.reset_index()
-    df_normal.rename(columns={"index": "unique_id"}, inplace=True)
+    df_normal= tmp_prepare_data(args.dataset_root, args.file_name_normal)
     print('正常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_normal))
 
     # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]
@@ -47,7 +48,6 @@ def prepare_normal_data(args, **kwargs):
     feature_sid_list = []  # session_id
     feature_uid_list = []  # user_id
     df_normal.sort_values(['date_time'], ascending=[True], inplace=True)
-    # df_normal.sort_values(['date_time', 'sort_source'], ascending=[True, True], inplace=True)
     for n, en in df_normal.groupby("session_id"):
         feature_sid_list.append(n)
         cur_feature = []
@@ -111,12 +111,7 @@ def prepare_abnormal_data(args, **kwargs):
     page2id = json.load(open(args.vocab_dict_path, 'r'))
     max_seq_len = args.max_seq_len + 1
 
-    abnormal_data_path = os.path.join(
-        args.dataset_root, args.file_name_abnormal)
-    df_abnormal = pd.read_csv(abnormal_data_path)
-    df_abnormal["date_time"] = pd.to_datetime(df_abnormal.date_time)
-    df_abnormal = df_abnormal.reset_index()
-    df_abnormal.rename(columns={"index": "unique_id"}, inplace=True)
+    df_abnormal= tmp_prepare_data(args.dataset_root, args.file_name_abnormal)
     print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))
 
     # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]
@@ -127,7 +122,6 @@ def prepare_abnormal_data(args, **kwargs):
     feature_sid_list = []
     feature_uid_list = []
     df_abnormal.sort_values(['date_time'], ascending=[True], inplace=True)
-    # df_abnormal.sort_values(['date_time', 'sort_source'], ascending=[True, True], inplace=True)
     for n, en in df_abnormal.groupby("session_id"):
         feature_sid_list.append(n)
         cur_feature = []
