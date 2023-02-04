@@ -40,6 +40,16 @@ python g_lastword_dict.py -page2num_dir ../data/page2nums/ \
 
 然后根据page2num.json文件生成页面的编码
 
+liyue跑这个代码：
+
+```bash
+python g_code.py -lastword_dict_dir ../data/page2nums/ \
+                -lastword_dict_name lastword_dict.json \
+                -output_dir_lastword_dict ../data/assets/
+```
+
+模拟的时候跑的代码。
+
 ```bash
 python g_code.py -lastword_dict_dir ../data/page2nums/ \
                 -lastword_dict_name lastword_dict.json \

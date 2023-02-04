@@ -10,7 +10,7 @@ Or follow instructions in requirements.txt to install.
 
 ### train 
 
-训练的时候
+训练的时候，主要可调的参数有**max_seq_len, embedding_dim, hidden_dim, steps_per_epoch, batch_size**
 
 ```bash
 # 第一次运行时生成cache文件
