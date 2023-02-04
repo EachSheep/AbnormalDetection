@@ -5,8 +5,34 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-torch.manual_seed(1234)
-torch.cuda.manual_seed(1234)
+torch.manual_seed(42)
+torch.cuda.manual_seed(42)
+
+
+class CNN(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, n_filters, filter_sizes,
+                 output_dim, use_dropout):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.convs = nn.ModuleList([
+            nn.Conv2d(in_channels=1, out_channels=n_filters,
+                      kernel_size=(fs, embedding_dim)) for fs in filter_sizes
+        ])
+        self.fc = nn.Linear(len(filter_sizes) * n_filters, output_dim)
+        self.dropout = nn.Dropout(0.5 if use_dropout else 0.)
+
+    def forward(self, x):
+        x = x.permute(1, 0)
+        embedded = self.embedding(x)
+        embedded = embedded.unsqueeze(1)
+
+        conved = [F.relu(conv(embedded)).squeeze(3) for conv in self.convs]
+        pooled = [F.max_pool1d(conv, conv.shape[2]).squeeze(2)
+                  for conv in conved]
+
+        cat = self.dropout(torch.cat(pooled, dim=1))
+
+        return self.fc(cat)
 
 
 class RNN(nn.Module):
@@ -50,44 +76,13 @@ class LSTM(nn.Module):
         self.dropout = nn.Dropout(0.5 if use_dropout else 0.)
 
     def forward(self, x):
-        embedded = self.embedding(x)
-        output, (hidden, cell) = self.rnn(embedded)
-        # seq len * batch * embedd
-        # print(output.shape)
-        # output = output.max(0)[0]
-        # print(output.shape)
-
-        hidden = self.dropout(torch.cat((hidden[-2, :, :], hidden[-1, :, :]),
-                                        dim=1))
-
-        return self.fc(hidden.squeeze(0))
-        # return self.fc(self.dropout(output))
-
-
-class CNN(nn.Module):
-    def __init__(self, vocab_size, embedding_dim, n_filters, filter_sizes,
-                 output_dim, use_dropout):
-        super().__init__()
-        self.embedding = nn.Embedding(vocab_size, embedding_dim)
-        self.convs = nn.ModuleList([
-            nn.Conv2d(in_channels=1, out_channels=n_filters,
-                      kernel_size=(fs, embedding_dim)) for fs in filter_sizes
-        ])
-        self.fc = nn.Linear(len(filter_sizes) * n_filters, output_dim)
-        self.dropout = nn.Dropout(0.5 if use_dropout else 0.)
-
-    def forward(self, x):
         x = x.permute(1, 0)
         embedded = self.embedding(x)
-        embedded = embedded.unsqueeze(1)
-
-        conved = [F.relu(conv(embedded)).squeeze(3) for conv in self.convs]
-        pooled = [F.max_pool1d(conv, conv.shape[2]).squeeze(2)
-                  for conv in conved]
-
-        cat = self.dropout(torch.cat(pooled, dim=1))
-
-        return self.fc(cat)
+        output, (hidden, cell) = self.rnn(embedded)
+        
+        hidden = self.dropout(torch.cat((hidden[-2, :, :], hidden[-1, :, :]),
+                                        dim=1))
+        return self.fc(hidden.squeeze(0))
 
 
 class LSTM_with_Attention(nn.Module):
