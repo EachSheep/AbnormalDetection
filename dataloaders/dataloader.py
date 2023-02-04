@@ -1,170 +1,14 @@
 """数据加载器
 """
 import os
-import itertools
 import pandas as pd
 import torch
 import json
-import collections
 from torch.utils.data import DataLoader
 
 from dataloaders.MyDataset import MyDataset
 from dataloaders.utlis import worker_init_fn_seed, BalancedBatchSampler, RandomedBatchSampler
-
-def tmp_prepare_data(in_dir, file_name):
-    normal_data_path = os.path.join(in_dir, file_name)
-    df = pd.read_csv(normal_data_path)
-    df["date_time"] = pd.to_datetime(df["date_time"])
-    df = df.reset_index()
-    df.rename(columns={"index": "unique_id"}, inplace=True)
-    return df
-
-def prepare_normal_data(args, **kwargs):
-    """载入正常数据
-    Args:
-        args (argparse.ArgumentParser()): 参数
-        kwargs (dict): 参数
-
-    Returns:
-        feature_list (torch.LongTensor): 异常用户的session向量
-        feature_len_list (torch.LongTensor): 异常用户的session向量长度
-        feature_sid_list (pd.DataFrame): 用户的session_id
-        feature_uid_list (pd.DataFrame): 用户的user_id
-        feature_label_list (torch.LongTensor): 异常用户的session向量标签
-        unknown_page_name (collections.Counter): 未知页面名
-        unknown_page_len (collections.Counter): 超过max_seq_len的页面长度
-    """
-    page2id = json.load(open(args.vocab_dict_path, 'r'))
-    max_seq_len = args.max_seq_len + 1  # +1是<eos>的位置
-
-    df_normal= tmp_prepare_data(args.dataset_root, args.file_name_normal)
-    print('正常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_normal))
-
-    # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]
-    unknown_page_name = []
-    unknown_page_len = []
-    feature_list = []
-    feature_len_list = []
-    feature_sid_list = []  # session_id
-    feature_uid_list = []  # user_id
-    df_normal.sort_values(['date_time'], ascending=[True], inplace=True)
-    for n, en in df_normal.groupby("session_id"):
-        feature_sid_list.append(n)
-        cur_feature = []
-        first = True
-        cur_uid = None
-        for _, e in en.iterrows():
-            if first:
-                cur_uid = e.user_id
-                first = False
-            if e.page_name in page2id:
-                cur_feature.append(page2id[e.page_name])
-            else:
-                cur_feature.append(page2id['<unk>'])
-                unknown_page_name.append(e.page_name)
-        feature_uid_list.append(cur_uid)
-        if len(cur_feature) >= max_seq_len:
-            unknown_page_len.append(len(cur_feature))
-            cur_feature = cur_feature[-(max_seq_len-1):]
-        cur_feature.append(page2id['<eos>'])
-        len_cur_feature = len(cur_feature)
-        cur_feature.extend(
-            [page2id['<pad>']] * (max_seq_len - len_cur_feature))
-        # 可以在此加入其他特征
-        feature_list.append(cur_feature)
-        feature_len_list.append(len_cur_feature)
-
-    # 转化成[batch_size, seq_len]
-    feature_list = list(itertools.zip_longest(
-        *feature_list, fillvalue=page2id['<pad>']))
-    feature_list = torch.LongTensor(
-        feature_list).T  # shape: [batch_size, seq_len]
-    feature_len_list = torch.LongTensor(
-        feature_len_list)  # shape: [batch_size]
-    feature_sid_list = pd.DataFrame(
-        feature_sid_list, columns=['session_id'])  # shape: [batch_size]
-    feature_uid_list = pd.DataFrame(
-        feature_uid_list, columns=['user_id'])  # shape: [batch_size]
-    feature_label_list = torch.zeros(  # 标签全部为0
-        feature_list.shape[0], dtype=feature_list.dtype)  # shape: [batch_size]
-
-    unknown_page_name = collections.Counter(unknown_page_name)
-    unknown_page_len = collections.Counter(unknown_page_len)
-    return feature_list, feature_len_list, feature_sid_list, feature_uid_list, feature_label_list, unknown_page_name, unknown_page_len
-
-
-def prepare_abnormal_data(args, **kwargs):
-    """载入异常数据
-    Args:
-        args (argparse.ArgumentParser()): 参数
-        kwargs (dict): 参数
-
-    Returns:
-        feature_list (torch.LongTensor): 异常用户的session向量
-        feature_len_list (torch.LongTensor): 异常用户的session向量长度
-        feature_sid_list (pd.DataFrame): 用户的session_id
-        feature_uid_list (pd.DataFrame): 用户的user_id
-        feature_label_list (torch.LongTensor): 异常用户的session向量标签
-        unknown_page_name (collections.Counter): 未知页面名
-        unknown_page_len (collections.Counter): 超过max_seq_len的页面长度
-    """
-    page2id = json.load(open(args.vocab_dict_path, 'r'))
-    max_seq_len = args.max_seq_len + 1
-
-    df_abnormal= tmp_prepare_data(args.dataset_root, args.file_name_abnormal)
-    print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))
-
-    # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]
-    unknown_page_name = []
-    unknown_page_len = []
-    feature_list = []
-    feature_len_list = []
-    feature_sid_list = []
-    feature_uid_list = []
-    df_abnormal.sort_values(['date_time'], ascending=[True], inplace=True)
-    for n, en in df_abnormal.groupby("session_id"):
-        feature_sid_list.append(n)
-        cur_feature = []
-        first = True
-        cur_uid = None
-        for _, e in en.iterrows():
-            if first:
-                cur_uid = e.user_id
-                first = False
-            if e.page_name in page2id:
-                cur_feature.append(page2id[e.page_name])
-            else:
-                cur_feature.append(page2id['<unk>'])
-                unknown_page_name.append(e.page_name)
-        feature_uid_list.append(cur_uid)
-        if len(cur_feature) >= max_seq_len:
-            unknown_page_len.append(len(cur_feature))
-            cur_feature = cur_feature[-(max_seq_len-1):]
-        cur_feature.append(page2id['<eos>'])
-        len_cur_feature = len(cur_feature)
-        cur_feature.extend(
-            [page2id['<pad>']] * (max_seq_len - len_cur_feature))
-        # 可以在此加入其他特征
-        feature_list.append(cur_feature)
-        feature_len_list.append(len_cur_feature)
-
-    # 转化成[batch_size, seq_len]
-    feature_list = list(itertools.zip_longest(
-        *feature_list, fillvalue=page2id['<pad>']))
-    feature_list = torch.LongTensor(
-        feature_list).T  # shape: [batch_size, seq_len]
-    feature_len_list = torch.LongTensor(
-        feature_len_list)  # shape: [batch_size]
-    feature_sid_list = pd.DataFrame(
-        feature_sid_list, columns=['session_id'])  # shape: [batch_size]
-    feature_uid_list = pd.DataFrame(
-        feature_uid_list, columns=['user_id'])  # shape: [batch_size]
-    feature_label_list = torch.ones(
-        feature_list.shape[0], dtype=feature_list.dtype)  # shape: [batch_size]
-
-    unknown_page_name = collections.Counter(unknown_page_name)
-    unknown_page_len = collections.Counter(unknown_page_len)
-    return feature_list, feature_len_list, feature_sid_list, feature_uid_list, feature_label_list, unknown_page_name, unknown_page_len
+from dataloaders.data2matrix import prepare_normal_data, prepare_abnormal_data
 
 
 def prepare_train_data(args, **kwargs):
@@ -185,10 +29,75 @@ def prepare_train_data(args, **kwargs):
         test_uid (pd.DataFrame): 测试集的user_id
         test_label (torch.LongTensor): 测试集的session向量标签
     """
-    feature_normal, feature_len_normal, feature_sid_normal, feature_uid_normal, feature_label_normal, unknown_page_name_normal, unknown_page_len_normal = prepare_normal_data(
-        args, **kwargs)
-    feature_abnormal, feature_len_abnormal, feature_sid_abnormal, feature_uid_abnormal, feature_label_abnormal, unknown_page_name_abnormal, unknown_page_len_abnormal = prepare_abnormal_data(
-        args, **kwargs)
+    if args.use_cache:
+        
+        feature_normal = torch.load(os.path.join(
+            args.experiment_dir, 'cache', f'feature_normal.pkl'))
+        feature_len_normal = torch.load(os.path.join(
+            args.experiment_dir, 'cache', f'feature_len_normal.pkl'))
+        feature_sid_normal = pd.read_csv(os.path.join(
+            args.experiment_dir, 'cache', f'feature_sid_normal.csv'))
+        feature_uid_normal = pd.read_csv(os.path.join(
+            args.experiment_dir, 'cache', f'feature_uid_normal.csv'))
+        feature_label_normal = torch.load(os.path.join(
+            args.experiment_dir, 'cache', f'feature_label_normal.pkl'))
+        unknown_page_name_normal = json.load(open(os.path.join(args.experiment_dir,
+                    'cache', f'unknown_page_name_normal.json'), 'r'))
+        unknown_page_len_normal = json.load(open(os.path.join(args.experiment_dir,
+                    'cache', f'unknown_page_len_normal.json'), 'r'))
+        
+        feature_abnormal = torch.load(os.path.join(
+            args.experiment_dir, 'cache', f'feature_abnormal.pkl'))
+        feature_len_abnormal = torch.load(os.path.join(
+            args.experiment_dir, 'cache', f'feature_len_abnormal.pkl'))
+        feature_sid_abnormal = pd.read_csv(os.path.join(
+            args.experiment_dir, 'cache', f'feature_sid_abnormal.csv'))
+        feature_uid_abnormal = pd.read_csv(os.path.join(
+            args.experiment_dir, 'cache', f'feature_uid_abnormal.csv'))
+        feature_label_abnormal = torch.load(os.path.join(
+            args.experiment_dir, 'cache', f'feature_label_abnormal.pkl'))
+        unknown_page_name_abnormal = json.load(open(os.path.join(args.experiment_dir,
+                    'cache', f'unknown_page_name_abnormal.json'), 'r'))
+        unknown_page_len_abnormal = json.load(open(os.path.join(args.experiment_dir,
+                    'cache', f'unknown_page_len_abnormal.json'), 'r'))
+    else:
+        feature_normal, feature_len_normal, feature_sid_normal, feature_uid_normal, feature_label_normal, \
+            unknown_page_name_normal, unknown_page_len_normal = prepare_normal_data(
+                args, **kwargs)
+        if not os.path.exists(os.path.join(args.experiment_dir, 'cache')):
+            os.makedirs(os.path.join(args.experiment_dir, 'cache'))
+        torch.save(feature_normal, os.path.join(
+            args.experiment_dir, 'cache', f'feature_normal.pkl'))
+        torch.save(feature_len_normal, os.path.join(
+            args.experiment_dir, 'cache', f'feature_len_normal.pkl'))
+        feature_sid_normal.to_csv(os.path.join(
+            args.experiment_dir, 'cache', f'feature_sid_normal.csv'), index=False)
+        feature_uid_normal.to_csv(os.path.join(
+            args.experiment_dir, 'cache', f'feature_uid_normal.csv'), index=False)
+        torch.save(feature_label_normal, os.path.join(
+            args.experiment_dir, 'cache', f'feature_label_normal.pkl'))
+        json.dump(unknown_page_name_normal, open(os.path.join(args.experiment_dir,
+                  'cache', f'unknown_page_name_normal.json'), 'w'), indent=4)
+        json.dump(unknown_page_len_normal, open(os.path.join(args.experiment_dir,
+                  'cache', f'unknown_page_len_normal.json'), 'w'), indent=4)
+
+        feature_abnormal, feature_len_abnormal, feature_sid_abnormal, feature_uid_abnormal, feature_label_abnormal, \
+            unknown_page_name_abnormal, unknown_page_len_abnormal = prepare_abnormal_data(
+                args, **kwargs)
+        torch.save(feature_abnormal, os.path.join(
+            args.experiment_dir, 'cache', f'feature_abnormal.pkl'))
+        torch.save(feature_len_abnormal, os.path.join(
+            args.experiment_dir, 'cache', f'feature_len_abnormal.pkl'))
+        feature_sid_abnormal.to_csv(os.path.join(
+            args.experiment_dir, 'cache', f'feature_sid_abnormal.csv'), index=False)
+        feature_uid_abnormal.to_csv(os.path.join(
+            args.experiment_dir, 'cache', f'feature_uid_abnormal.csv'), index=False)
+        torch.save(feature_label_abnormal, os.path.join(
+            args.experiment_dir, 'cache', f'feature_label_abnormal.pkl'))
+        json.dump(unknown_page_name_abnormal, open(os.path.join(args.experiment_dir,
+                    'cache', f'unknown_page_name_abnormal.json'), 'w'), indent=4)
+        json.dump(unknown_page_len_abnormal, open(os.path.join(args.experiment_dir,
+                    'cache', f'unknown_page_len_abnormal.json'), 'w'), indent=4)
     unknown_page_name_normal.update(unknown_page_name_abnormal)
     unknown_page_len_normal.update(unknown_page_len_abnormal)
     unknown_page_name = unknown_page_name_normal
@@ -198,9 +107,9 @@ def prepare_train_data(args, **kwargs):
     if not os.path.exists(os.path.join(args.experiment_dir, 'jsons')):
         os.makedirs(os.path.join(args.experiment_dir, 'jsons'))
     json.dump(unknown_page_name, open(os.path.join(args.experiment_dir,
-              'jsons', f'unknown_page_name-train-{args.cur_time}.json'), 'w'), indent=4)
+              'jsons', f'unknown_page_name-train.json'), 'w'), indent=4)
     json.dump(unknown_page_len, open(os.path.join(args.experiment_dir,
-              'jsons', f'unknown_page_len-train-{args.cur_time}.json'), 'w'), indent=4)
+              'jsons', f'unknown_page_len-train.json'), 'w'), indent=4)
 
     # 按照真实数据集的比例混合正常和异常数据，真实数据集的比例即 异常用户数 / 正常用户数
     # 这里假定session_vector_list和session_vector_list_abnormal就是真实数据集，因此不需要进行抽样，直接按照比例混合即可
@@ -333,9 +242,9 @@ def prepare_test_data(args, **kwargs):
     if not os.path.exists(os.path.join(args.experiment_dir, 'jsons')):
         os.makedirs(os.path.join(args.experiment_dir, 'jsons'))
     json.dump(unknown_page_name, open(os.path.join(args.experiment_dir,
-              'jsons', f'unknown_page_name-test-{args.cur_time}.json'), 'w'), indent=4)
+              'jsons', f'unknown_page_name-test.json'), 'w'), indent=4)
     json.dump(unknown_page_len, open(os.path.join(args.experiment_dir,
-              'jsons', f'unknown_page_len-test-{args.cur_time}.json'), 'w'), indent=4)
+              'jsons', f'unknown_page_len-test.json'), 'w'), indent=4)
 
     # 合并训练数据
     data = torch.cat((data_normal, data_abnormal), dim=0)
@@ -347,6 +256,7 @@ def prepare_test_data(args, **kwargs):
     uid = uid.reset_index(drop=True)
 
     return data, lenn, sid, uid, label
+
 
 def build_test_dataloader(args, **kwargs):
     """构建dataloader
@@ -369,6 +279,7 @@ def build_test_dataloader(args, **kwargs):
         **kwargs
     )
     return test_loader
+
 
 if __name__ == '__main__':
     pass

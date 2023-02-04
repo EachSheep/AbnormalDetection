@@ -18,14 +18,14 @@ if __name__ == '__main__':
     seting_dir = os.path.join(args.experiment_dir, 'jsons')
     if not os.path.exists(seting_dir):
         os.makedirs(seting_dir)
-    setting_path = os.path.join(seting_dir, f'train_setting-{args.cur_time}.json')
+    setting_path = os.path.join(seting_dir, f'train_setting.json')
 
     trainer = Trainer(args)
     runs_dir = os.path.join(args.experiment_dir, 'runs')
     if not os.path.exists(runs_dir):
         os.makedirs(runs_dir)
 
-    summarywriter_dir = os.path.join(runs_dir, f'train-{args.cur_time}')
+    summarywriter_dir = os.path.join(runs_dir, f'train')
     if os.path.exists(summarywriter_dir):
         for root, dirs, files in os.walk(summarywriter_dir, topdown=False):
             for name in files:
