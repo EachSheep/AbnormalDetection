@@ -21,6 +21,8 @@ class MyDataset(Dataset):
         self.normal_idx = torch.argwhere(self.label == 0).flatten()
         self.outlier_idx = torch.argwhere(self.label == 1).flatten()
 
+        self.valid_lens = self.kwargs['valid_lens']
+
     def __len__(self):
         return len(self.data)
 
@@ -31,5 +33,5 @@ class MyDataset(Dataset):
         return len(self.outlier_idx)
 
     def __getitem__(self, index):
-        sample = {'data': self.data[index], 'label': self.label[index]}
+        sample = {'data': self.data[index], 'label': self.label[index], 'valid_lens': self.valid_lens[index]}
         return sample

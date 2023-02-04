@@ -31,7 +31,7 @@ def prepare_normal_data(args, **kwargs):
         unknown_page_len (collections.Counter): 超过max_seq_len的页面长度
     """
     page2id = json.load(open(args.vocab_dict_path, 'r'))
-    max_seq_len = args.max_seq_len + 1  # +1是<eos>的位置
+    max_seq_len = args.max_seq_len
 
     df_normal= tmp_prepare_data(args.dataset_root, args.file_name_normal)
     print('正常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_normal))
@@ -105,7 +105,7 @@ def prepare_abnormal_data(args, **kwargs):
         unknown_page_len (collections.Counter): 超过max_seq_len的页面长度
     """
     page2id = json.load(open(args.vocab_dict_path, 'r'))
-    max_seq_len = args.max_seq_len + 1
+    max_seq_len = args.max_seq_len
 
     df_abnormal= tmp_prepare_data(args.dataset_root, args.file_name_abnormal)
     print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))

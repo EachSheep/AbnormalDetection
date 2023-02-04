@@ -75,7 +75,7 @@ class LSTM(nn.Module):
         self.fc = nn.Linear(hidden_dim * 2, output_dim)
         self.dropout = nn.Dropout(0.5 if use_dropout else 0.)
 
-    def forward(self, x):
+    def forward(self, x, valid_lens):
         x = x.permute(1, 0)
         embedded = self.embedding(x)
         output, (hidden, cell) = self.rnn(embedded)
@@ -129,7 +129,7 @@ class LSTM_with_Attention(nn.Module):
         weights = F.softmax(weights.squeeze(2), dim=1).unsqueeze(2)
         return torch.bmm(torch.transpose(lstm_output, 1, 2), weights).squeeze(2)
 
-    def forward(self, x):
+    def forward(self, x, valid_lens):
         x = x.permute(1, 0)
         embedded = self.embedding(x)
         output, (hidden, cell) = self.rnn(embedded)

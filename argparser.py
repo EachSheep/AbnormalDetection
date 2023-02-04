@@ -42,15 +42,26 @@ parser.add_argument('-backbone', type=str, default='lstma',
 parser.add_argument('-vocab_size', type=int, default=10000,
                     help="the vocab_size")  # 词汇表大小
 parser.add_argument('-embedding_dim', type=int,
-                    default=200, help="the embedding_dim")
+                    default=280, help="the embedding_dim")
 parser.add_argument('-hidden_dim', type=int,
-                    default=512, help="the hidden_dim")
+                    default=200, help="the hidden_dim")
 parser.add_argument('-output_dim', type=int, default=1, help="the output_dim")
 parser.add_argument('-n_layers', type=int, default=1, help="the n_layers")
 parser.add_argument('--use_bidirectional', action='store_true',
                     default=False, help="use bidirectional or not")
 parser.add_argument('--use_dropout', action='store_true',
                     default=False, help="use dropout or not")
+# transformer专属参数
+parser.add_argument('-key_size', type=int, default=200, help="the key size")
+parser.add_argument('-query_size', type=int, default=200, help="the query size")
+parser.add_argument('-value_size', type=int, default=200, help="the value size")
+parser.add_argument('-num_hiddens', type=int, default=280, help="the num_hiddens")
+parser.add_argument('-norm_shape', nargs='+', type = int, default=200, help="the norm_shape")
+parser.add_argument('-ffn_num_input', type=int, default=200, help="the ffn_num_input")
+parser.add_argument('-ffn_num_hiddens', type=int, default=280, help="the ffn_num_hiddens")
+parser.add_argument('-num_heads', type=int, default=4, help="the num_heads")
+parser.add_argument('-num_layers', type=int, default=2, help="the num_layers")
+parser.add_argument('-dropout', type=float, default=0.5, help="the dropout")
 
 # 损失函数和优化器设置
 parser.add_argument('-criterion', type=str,
