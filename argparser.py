@@ -40,7 +40,7 @@ parser.add_argument('--backbone', type=str, default='lstma',
 parser.add_argument('--vocab_size', type=int, default=10000,
                     help="the vocab_size")  # 词汇表大小
 parser.add_argument('--embedding_dim', type=int,
-                    default=300, help="the embedding_dim")
+                    default=200, help="the embedding_dim")
 parser.add_argument('--hidden_dim', type=int,
                     default=512, help="the hidden_dim")
 parser.add_argument('--output_dim', type=int, default=1, help="the output_dim")
@@ -68,7 +68,7 @@ parser.add_argument("--epochs", type=int, default=50,
                     help="the number of epochs")
 parser.add_argument("--batch_size", type=int, default=48,
                     help="batch size used")
-parser.add_argument("--steps_per_epoch", type=int, default=20, # 一个epoch中的batch数
+parser.add_argument("--steps_per_epoch", type=int, default=40, # 一个epoch中的batch数
                     help="the number of batches per epoch")
 
 args = parser.parse_args()

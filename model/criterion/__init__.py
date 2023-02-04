@@ -1,6 +1,7 @@
 import torch
 from model.criterion.deviation_loss import DeviationLoss
 from model.criterion.binary_focal_loss import BinaryFocalLoss
+import torch.nn as nn
 
 def build_criterion(args):
     if args.criterion == "deviation":

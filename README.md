@@ -13,18 +13,25 @@ Or follow instructions in requirements.txt to install.
 训练的时候
 
 ```bash
+
 python train.py --dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
                 --file_name_abnormal feedback.csv \
                 --file_name_normal normal.csv \
                 --max_seq_len 200 \
                 --vocab_dict_path data/assets/page2idx.json \
                 --vocab_size 10000 \
-                --embedding_dim 300 \
-                --hidden_dim 128 \
+                --backbone lstma \
+                --embedding_dim 280 \
+                --hidden_dim 200 \
+                --criterion BCE \
                 --lr 0.0002 \
-                --epochs 50 \
+                --epochs 30 \
+                --steps_per_epoch 40 \
                 --batch_size 128 \
+                --train_ratio 0.8 \
                 > experiment/log.txt
+
+# BCE, focal, deviation
 ```
 
 ### test

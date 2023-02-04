@@ -3,7 +3,7 @@ from torch.utils.data import Sampler
 
 
 def worker_init_fn_seed(worker_id):
-    seed = 10
+    seed = 42
     seed += worker_id
     np.random.seed(seed)
 
