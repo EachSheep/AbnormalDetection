@@ -8,7 +8,9 @@ from torch.utils.data import DataLoader
 
 from dataloaders.MyDataset import MyDataset
 from dataloaders.utlis import worker_init_fn_seed, BalancedBatchSampler, RandomedBatchSampler
-from dataloaders.data2matrix import prepare_normal_data, prepare_abnormal_data
+import dataloaders.data2matrix_by_session as d2mbs
+import dataloaders.data2matrix_by_user as d2mbu
+
 
 
 def prepare_train_data(args, **kwargs):
@@ -61,9 +63,16 @@ def prepare_train_data(args, **kwargs):
         unknown_page_len_abnormal = json.load(open(os.path.join(args.experiment_dir,
                     'cache', f'unknown_page_len_abnormal.json'), 'r'))
     else:
-        feature_normal, feature_len_normal, feature_sid_normal, feature_uid_normal, feature_label_normal, \
-            unknown_page_name_normal, unknown_page_len_normal = prepare_normal_data(
-                args, **kwargs)
+        if args.data_type == 'session':
+            feature_normal, feature_len_normal, feature_sid_normal, feature_uid_normal, feature_label_normal, \
+                unknown_page_name_normal, unknown_page_len_normal = d2mbs.prepare_normal_data(
+                    args, **kwargs)
+        elif args.data_type == 'user':
+            feature_normal, feature_len_normal, feature_sid_normal, feature_uid_normal, feature_label_normal, \
+                unknown_page_name_normal, unknown_page_len_normal = d2mbu.prepare_normal_data(
+                    args, **kwargs)
+        else:
+            raise ValueError('args.data_type must be session or user')
         if not os.path.exists(os.path.join(args.experiment_dir, 'cache')):
             os.makedirs(os.path.join(args.experiment_dir, 'cache'))
         torch.save(feature_normal, os.path.join(
@@ -80,10 +89,17 @@ def prepare_train_data(args, **kwargs):
                   'cache', f'unknown_page_name_normal.json'), 'w'), indent=4)
         json.dump(unknown_page_len_normal, open(os.path.join(args.experiment_dir,
                   'cache', f'unknown_page_len_normal.json'), 'w'), indent=4)
-
-        feature_abnormal, feature_len_abnormal, feature_sid_abnormal, feature_uid_abnormal, feature_label_abnormal, \
-            unknown_page_name_abnormal, unknown_page_len_abnormal = prepare_abnormal_data(
-                args, **kwargs)
+        
+        if args.data_type == 'session':
+            feature_abnormal, feature_len_abnormal, feature_sid_abnormal, feature_uid_abnormal, feature_label_abnormal, \
+                unknown_page_name_abnormal, unknown_page_len_abnormal = d2mbs.prepare_abnormal_data(
+                    args, **kwargs)
+        elif args.data_type == 'user':
+            feature_abnormal, feature_len_abnormal, feature_sid_abnormal, feature_uid_abnormal, feature_label_abnormal, \
+                unknown_page_name_abnormal, unknown_page_len_abnormal = d2mbu.prepare_abnormal_data(
+                    args, **kwargs)
+        else:
+            raise ValueError('args.data_type must be session or user')
         torch.save(feature_abnormal, os.path.join(
             args.experiment_dir, 'cache', f'feature_abnormal.pkl'))
         torch.save(feature_len_abnormal, os.path.join(
@@ -229,10 +245,16 @@ def prepare_test_data(args, **kwargs):
         test_uid (pd.DataFrame): 测试集的user_id
         test_label (torch.LongTensor): 测试集的session向量标签
     """
-    data_normal, len_normal, sid_normal, uid_normal, label_normal, unknown_page_name_normal, unknown_page_len_normal = prepare_normal_data(
-        args, **kwargs)
-    data_abnormal, len_abnormal, sid_abnormal, uid_abnormal, label_abnormal, unknown_page_name_abnormal, unknown_page_len_abnormal = prepare_abnormal_data(
-        args, **kwargs)
+    if args.data_type == "session":
+        data_normal, len_normal, sid_normal, uid_normal, label_normal, unknown_page_name_normal, unknown_page_len_normal = d2mbs.prepare_normal_data(
+            args, **kwargs)
+        data_abnormal, len_abnormal, sid_abnormal, uid_abnormal, label_abnormal, unknown_page_name_abnormal, unknown_page_len_abnormal = d2mbs.prepare_abnormal_data(
+            args, **kwargs)
+    elif args.data_type == "user":
+        data_normal, len_normal, sid_normal, uid_normal, label_normal, unknown_page_name_normal, unknown_page_len_normal = d2mbu.prepare_normal_data(
+            args, **kwargs)
+        data_abnormal, len_abnormal, sid_abnormal, uid_abnormal, label_abnormal, unknown_page_name_abnormal, unknown_page_len_abnormal = d2mbu.prepare_abnormal_data(
+            args, **kwargs)
     unknown_page_name_normal.update(unknown_page_name_abnormal)
     unknown_page_len_normal.update(unknown_page_len_abnormal)
     unknown_page_name = unknown_page_name_normal

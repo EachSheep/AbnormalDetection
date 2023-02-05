@@ -31,6 +31,8 @@ parser.add_argument('--use_cache', action='store_true', default=False,
                     help="user cache or not")  # 是否使用之前使用数据集直接生成的矩阵
 parser.add_argument('-vocab_dict_path', type=str, default='data/assets/page2idx.json',
                     help="vocab dict path")  # 页面->id的字典存放路径
+parser.add_argument('-data_type', type=str, default='session',
+                    help="user session or user")  # 按照session切分还是按照user切分
 parser.add_argument('-max_seq_len', type=int, default=200,
                     help="vocab dict path")  # 页面->id的字典存放路径
 parser.add_argument('-train_ratio', type=float, default=0.8,

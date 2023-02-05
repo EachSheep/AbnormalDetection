@@ -6,14 +6,14 @@ Install with `pip install -r requirements.txt`.
 
 Or follow instructions in requirements.txt to install.
 
-## Running
+## Train
 
-### train 
+### lstm based 
 
 训练的时候，主要可调的参数有**max_seq_len, embedding_dim, hidden_dim, steps_per_epoch, batch_size**
 
 ```bash
-# 第一次运行时生成cache文件
+# 第一次运行时生成cache文件，注意！！！更改max_seq_len之后需要去掉--cache重新运行一遍
 python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
@@ -28,9 +28,10 @@ python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 -epochs 30 \
                 -steps_per_epoch 40 \
                 -batch_size 128 \
-                -train_ratio 0.8
+                -train_ratio 0.8 \
+                > experiment/log.txt
 
-# 之后的运行可以制定cache参数
+# 之后的运行可以指定cache参数。
 python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
@@ -66,12 +67,20 @@ python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 -epochs 30 \
                 -steps_per_epoch 40 \
                 -batch_size 128 \
-                -train_ratio 0.8
+                -train_ratio 0.8 \
+                > experiment/log.txt
 
-# BCE, focal, deviation
+# 可以使用的loss有BCE, focal, deviation，但是感觉BCE就够了
 ```
 
-transformer
+### transformer based 
+
+transformer为backbone。
+
+训练的时候，主要可调的参数有**max_seq_len, embedding_dim, ffn_num_hiddens, num_heads, num_layers, batch_size**。
+
+注意：embedding_dim必须是num_heads的倍数
+
 
 ```bash
 
@@ -93,17 +102,73 @@ python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 -epochs 30 \
                 -steps_per_epoch 40 \
                 -batch_size 128 \
-                -train_ratio 0.8
+                -train_ratio 0.8 \
+                > experiment/log.txt
 ```
-embedding_dim必须是num_heads的倍数
-### test
+
+### 按照user_id切分用户访问页面，而不是session
+
+只要加上-data_type user即可(最好调一下max_seq_len参数调大一些，当然也不是说这么做就好，只是直觉上感觉，具体这么做有没有效果，调参决定)，注意！！！更改max_seq_len和data_type之后都需要去掉--cache重新运行一遍。
+
+第一次运行不加上--user_cache选项以生成cache
+
+```bash
+python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
+                -file_name_abnormal feedback.csv \
+                -file_name_normal normal.csv \
+                -data_type user \
+                -max_seq_len 250 \
+                -vocab_dict_path data/assets/page2idx.json \
+                -vocab_size 10000 \
+                -backbone transformer \
+                -embedding_dim 280 \
+                -ffn_num_hiddens 200 \
+                -num_heads 4 \
+                -num_layers 2 \
+                -dropout 0.5 \
+                -criterion BCE \
+                -lr 0.0002 \
+                -epochs 30 \
+                -steps_per_epoch 40 \
+                -batch_size 128 \
+                -train_ratio 0.8 \
+                > experiment/log.txt
+```
+
+之后运行可以加上--user_cache选项
+
+```bash
+python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
+                -file_name_abnormal feedback.csv \
+                -file_name_normal normal.csv \
+                -data_type user \
+                -max_seq_len 250 \
+                -vocab_dict_path data/assets/page2idx.json \
+                -vocab_size 10000 \
+                -backbone transformer \
+                -embedding_dim 280 \
+                -ffn_num_hiddens 200 \
+                -num_heads 4 \
+                -num_layers 2 \
+                -dropout 0.5 \
+                -criterion BCE \
+                -lr 0.0002 \
+                -epochs 30 \
+                -steps_per_epoch 40 \
+                -batch_size 128 \
+                -train_ratio 0.8 \
+                > experiment/log.txt
+```
+
+## Test
 
 ```bash
 python test.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/ \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
                 -max_seq_len 200 \
-                -vocab_dict_path pre/data/page2idx.json > experiment/log.txt
+                -vocab_dict_path data/page2idx.json \
+                > experiment/log.txt
 ```
 
 ## Reference
