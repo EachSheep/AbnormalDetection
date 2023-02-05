@@ -44,7 +44,7 @@ def preprocess(in_dir, normal_names, feedback_names, output_dir, **kwargs):
         # 去除nan, 预处理, 筛选过少轨迹的用户
         def tmp(normal):
             normal['page_name'] = normal['page_name'].map(url_preprocess)
-
+            
             df_normal_cnt = normal.groupby("session_id")['unique_id'].count()
             df_normal_sel_id = df_normal_cnt[df_normal_cnt >= min_seq_len]
             normal = normal[normal['session_id'].isin(
