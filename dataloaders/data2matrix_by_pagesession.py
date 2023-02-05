@@ -44,20 +44,20 @@ def prepare_normal_data(args, **kwargs):
     feature_sid_list = []  # session_id
     feature_uid_list = []  # user_id
     df_normal.sort_values(['date_time'], ascending=[True], inplace=True)
-    for n, en in df_normal.groupby("user_id"):
+    for n, en in df_normal.groupby("session_id"):
         feature_sid_list.append(n)
         cur_feature = []
         first = True
         cur_uid = None
         for _, e in en.iterrows():
             if first:
-                cur_uid = e.user_id
+                cur_uid = e["user_id"]
                 first = False
-            if e.page_name in page2id:
-                cur_feature.append(page2id[e.page_name])
+            if e["page_name"] in page2id:
+                cur_feature.append(page2id[e["page_name"]])
             else:
                 cur_feature.append(page2id['<unk>'])
-                unknown_page_name.append(e.page_name)
+                unknown_page_name.append(e["page_name"])
         feature_uid_list.append(cur_uid)
         if len(cur_feature) >= max_seq_len:
             unknown_page_len.append(len(cur_feature))
@@ -125,13 +125,13 @@ def prepare_abnormal_data(args, **kwargs):
         cur_uid = None
         for _, e in en.iterrows():
             if first:
-                cur_uid = e.user_id
+                cur_uid = e["user_id"]
                 first = False
-            if e.page_name in page2id:
-                cur_feature.append(page2id[e.page_name])
+            if e["page_name"] in page2id:
+                cur_feature.append(page2id[e["page_name"]])
             else:
                 cur_feature.append(page2id['<unk>'])
-                unknown_page_name.append(e.page_name)
+                unknown_page_name.append(e["page_name"])
         feature_uid_list.append(cur_uid)
         if len(cur_feature) >= max_seq_len:
             unknown_page_len.append(len(cur_feature))

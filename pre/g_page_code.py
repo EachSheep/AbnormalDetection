@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     afterwash_dict = preprocess(page2num)
     page2num_afterwash_path = os.path.join(
-        pre_args.page2num_dir, "page2num_afterwash.json")
+        pre_args.page2num_dir, "page2num_afterwash_encodepage.json")
     json.dump(afterwash_dict, open(
         page2num_afterwash_path, 'w'), indent=4)
 

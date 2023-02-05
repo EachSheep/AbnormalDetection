@@ -116,7 +116,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
 python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
-                -data_type user \
+                -data_type pageuser \
                 -max_seq_len 250 \
                 -vocab_dict_path data/assets/page2idx.json \
                 -vocab_size 10000 \
@@ -141,13 +141,65 @@ python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
 python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
-                -data_type user \
+                -data_type pageuser \
                 -max_seq_len 250 \
                 -vocab_dict_path data/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone transformer \
                 -embedding_dim 280 \
                 -ffn_num_hiddens 200 \
+                -num_heads 4 \
+                -num_layers 2 \
+                -dropout 0.5 \
+                -criterion BCE \
+                -lr 0.0002 \
+                -epochs 30 \
+                -steps_per_epoch 40 \
+                -batch_size 128 \
+                -train_ratio 0.8 \
+                > experiment/log.txt
+```
+
+### 按照单词建立词典，而后建立向量
+
+第一次运行不加上--user_cache选项以生成cache
+
+```bash
+python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
+                -file_name_abnormal feedback.csv \
+                -file_name_normal normal.csv \
+                -data_type worduser \
+                -max_seq_len 400 \
+                -vocab_dict_path data/assets/word2idx.json \
+                -vocab_size 10000 \
+                -backbone transformer \
+                -embedding_dim 512 \
+                -ffn_num_hiddens 400 \
+                -num_heads 4 \
+                -num_layers 2 \
+                -dropout 0.5 \
+                -criterion BCE \
+                -lr 0.0002 \
+                -epochs 30 \
+                -steps_per_epoch 40 \
+                -batch_size 128 \
+                -train_ratio 0.8 \
+                > experiment/log.txt
+```
+
+之后运行可以加上--user_cache选项
+
+```bash
+python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
+                -file_name_abnormal feedback.csv \
+                -file_name_normal normal.csv \
+                -data_type worduser \
+                -max_seq_len 400 \
+                -vocab_dict_path data/assets/word2idx.json \
+                -vocab_size 10000 \
+                -backbone transformer \
+                -embedding_dim 512 \
+                -ffn_num_hiddens 400 \
                 -num_heads 4 \
                 -num_layers 2 \
                 -dropout 0.5 \
