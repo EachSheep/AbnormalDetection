@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from model.backbone.lstm import LSTM_with_Attention, LSTM, RNN
-from model.backbone.transformer import TransformerEncoder
+from model.backbone.transformer import TransformerEncoder, TransformerDecoder, Transformer
 
 
 class LSTMNet(nn.Module):
@@ -32,18 +32,14 @@ class LSTMNet(nn.Module):
                 use_dropout=self.args.use_dropout,
             )
         elif self.args.backbone == "transformer":
-            self.feature_extractor = TransformerEncoder(
+            self.feature_extractor = Transformer(
                 self.args.vocab_size,
-                self.args.key_size,
-                self.args.query_size,
-                self.args.value_size,
-                self.args.num_hiddens,
-                self.args.norm_shape,
-                self.args.ffn_num_input,
+                self.args.embedding_dim,
                 self.args.ffn_num_hiddens,
                 self.args.num_heads,
                 self.args.num_layers,
-                self.args.dropout
+                self.args.dropout,
+                self.args.output_dim,
             )
         else:
             print("backbone not supported")
