@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 
 from dataloaders.dataloader import build_test_dataloader
-from model.lstmnet import LSTMNet
+from model.net import LSTMNet
 from model.criterion import build_criterion
 
 from sklearn.metrics import average_precision_score, roc_auc_score, recall_score, precision_score
@@ -41,12 +41,12 @@ class Tester(object):
 
         epoch_num = 0
         for i, sample in enumerate(tbar):
-            batch_data, label = sample['data'], sample['label']
+            batch_data, label, valid_lens = sample['data'], sample['label'], sample['valid_lens']
             if self.args.cuda:
-                batch_data, label = batch_data.cuda(), label.cuda()
+                batch_data, label, valid_lens = batch_data.cuda(), label.cuda(), valid_lens.cuda()
 
             with torch.no_grad():
-                output = self.model(batch_data)
+                output = self.model(batch_data, valid_lens)
             loss = self.criterion(output, label.unsqueeze(1).float())
 
             test_loss += loss.item()

@@ -5,7 +5,7 @@ from tqdm import tqdm
 import time
 
 from dataloaders.dataloader import build_train_dataloader
-from model.lstmnet import LSTMNet
+from model.net import LSTMNet
 from model.criterion import build_criterion
 
 from sklearn.metrics import average_precision_score, roc_auc_score, recall_score, precision_score
@@ -46,11 +46,11 @@ class Trainer(object):
         train_loss = 0.0
         tbar = tqdm(self.train_loader)
         for i, sample in enumerate(tbar):
-            batch_data, label = sample['data'], sample['label']
+            batch_data, label, valid_lens = sample['data'], sample['label'], sample['valid_lens']
             if self.args.cuda:
-                batch_data, label = batch_data.cuda(), label.cuda()
+                batch_data, label, valid_lens = batch_data.cuda(), label.cuda(), valid_lens.cuda()
 
-            output = self.model(batch_data)
+            output = self.model(batch_data, valid_lens)
             loss = self.criterion(output, label.unsqueeze(1).float())
             self.optimizer.zero_grad()
             loss.backward()
@@ -81,12 +81,12 @@ class Trainer(object):
         total_pred = np.array([])
         total_target = np.array([])
         for i, sample in enumerate(tbar):
-            batch_data, label = sample['data'], sample['label']
+            batch_data, label, valid_lens = sample['data'], sample['label'], sample['valid_lens']
             if self.args.cuda:
-                batch_data, label = batch_data.cuda(), label.cuda()
+                batch_data, label, valid_lens = batch_data.cuda(), label.cuda(), valid_lens.cuda()
 
             with torch.no_grad():
-                output = self.model(batch_data)
+                output = self.model(batch_data, valid_lens)
             loss = self.criterion(output, label.unsqueeze(1).float())
 
             test_loss += loss.item()

@@ -191,9 +191,9 @@ def build_train_dataloader(args, **kwargs):
     train_data, train_len, train_sid, train_uid, train_label, test_data, test_len, test_id, test_uid, test_label = prepare_train_data(
         args, **kwargs)
     train_set = MyDataset(args, train_data, train_label,
-                          **{"len": train_len, "sid": train_sid, "uid": train_uid})
+                          **{"valid_lens": train_len, "sid": train_sid, "uid": train_uid})
     test_set = MyDataset(args, test_data, test_label, **
-                         {"len": test_len, "sid": test_id, "uid": test_uid})
+                         {"valid_lens": test_len, "sid": test_id, "uid": test_uid})
     args.train_normal_num = train_set.normal_num()
     args.train_abnormal_num = train_set.abnormal_num()
     args.test_normal_num = test_set.normal_num()
@@ -270,7 +270,7 @@ def build_test_dataloader(args, **kwargs):
     test_data, test_len, test_id, test_uid, test_label = prepare_test_data(
         args, **kwargs)
     test_set = MyDataset(args, test_data, test_label, **
-                         {"len": test_len, "sid": test_id, "uid": test_uid})
+                         {"valid_lens": test_len, "sid": test_id, "uid": test_uid})
     test_loader = DataLoader(
         test_set,
         batch_size=args.batch_size,
