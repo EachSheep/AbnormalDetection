@@ -28,8 +28,8 @@ def prepare_normal_data(args, **kwargs):
         feature_sid_list (pd.DataFrame): 用户的session_id
         feature_uid_list (pd.DataFrame): 用户的user_id
         feature_label_list (torch.LongTensor): 异常用户的session向量标签
-        unknown_page_name (collections.Counter): 未知页面名
-        unknown_page_len (collections.Counter): 超过max_seq_len的页面长度
+        unknown_word_name (collections.Counter): 未知页面名
+        unknown_word_len (collections.Counter): 超过max_seq_len的页面长度
     """
     word2idx = json.load(open(args.vocab_dict_path, 'r'))
     max_seq_len = args.max_seq_len
@@ -38,8 +38,8 @@ def prepare_normal_data(args, **kwargs):
     print('正常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_normal))
 
     # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]
-    unknown_page_name = []
-    unknown_page_len = []
+    unknown_word_name = []
+    unknown_word_len = []
     feature_list = []
     feature_len_list = []
     feature_sid_list = []  # session_id
@@ -60,10 +60,10 @@ def prepare_normal_data(args, **kwargs):
                     cur_feature.append(word2idx[word])
                 else:
                     cur_feature.append(word2idx['<unk>'])
-                    unknown_page_name.append(word)
+                    unknown_word_name.append(word)
         feature_uid_list.append(cur_uid)
         if len(cur_feature) >= max_seq_len:
-            unknown_page_len.append(len(cur_feature))
+            unknown_word_len.append(len(cur_feature))
             cur_feature = cur_feature[-(max_seq_len-1):]
         cur_feature.append(word2idx['<eos>'])
         len_cur_feature = len(cur_feature)
@@ -87,9 +87,9 @@ def prepare_normal_data(args, **kwargs):
     feature_label_list = torch.zeros(  # 标签全部为0
         feature_list.shape[0], dtype=feature_list.dtype)  # shape: [batch_size]
 
-    unknown_page_name = collections.Counter(unknown_page_name)
-    unknown_page_len = collections.Counter(unknown_page_len)
-    return feature_list, feature_len_list, feature_sid_list, feature_uid_list, feature_label_list, unknown_page_name, unknown_page_len
+    unknown_word_name = collections.Counter(unknown_word_name)
+    unknown_word_len = collections.Counter(unknown_word_len)
+    return feature_list, feature_len_list, feature_sid_list, feature_uid_list, feature_label_list, unknown_word_name, unknown_word_len
 
 
 def prepare_abnormal_data(args, **kwargs):
@@ -104,8 +104,8 @@ def prepare_abnormal_data(args, **kwargs):
         feature_sid_list (pd.DataFrame): 用户的session_id
         feature_uid_list (pd.DataFrame): 用户的user_id
         feature_label_list (torch.LongTensor): 异常用户的session向量标签
-        unknown_page_name (collections.Counter): 未知页面名
-        unknown_page_len (collections.Counter): 超过max_seq_len的页面长度
+        unknown_word_name (collections.Counter): 未知页面名
+        unknown_word_len (collections.Counter): 超过max_seq_len的页面长度
     """
     word2idx = json.load(open(args.vocab_dict_path, 'r'))
     max_seq_len = args.max_seq_len
@@ -114,8 +114,8 @@ def prepare_abnormal_data(args, **kwargs):
     print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))
 
     # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]
-    unknown_page_name = []
-    unknown_page_len = []
+    unknown_word_name = []
+    unknown_word_len = []
     feature_list = []
     feature_len_list = []
     feature_sid_list = []
@@ -136,10 +136,10 @@ def prepare_abnormal_data(args, **kwargs):
                     cur_feature.append(word2idx[word])
                 else:
                     cur_feature.append(word2idx['<unk>'])
-                    unknown_page_name.append(word)
+                    unknown_word_name.append(word)
         feature_uid_list.append(cur_uid)
         if len(cur_feature) >= max_seq_len:
-            unknown_page_len.append(len(cur_feature))
+            unknown_word_len.append(len(cur_feature))
             cur_feature = cur_feature[-(max_seq_len-1):]
         cur_feature.append(word2idx['<eos>'])
         len_cur_feature = len(cur_feature)
@@ -163,9 +163,9 @@ def prepare_abnormal_data(args, **kwargs):
     feature_label_list = torch.ones(
         feature_list.shape[0], dtype=feature_list.dtype)  # shape: [batch_size]
 
-    unknown_page_name = collections.Counter(unknown_page_name)
-    unknown_page_len = collections.Counter(unknown_page_len)
-    return feature_list, feature_len_list, feature_sid_list, feature_uid_list, feature_label_list, unknown_page_name, unknown_page_len
+    unknown_word_name = collections.Counter(unknown_word_name)
+    unknown_word_len = collections.Counter(unknown_word_len)
+    return feature_list, feature_len_list, feature_sid_list, feature_uid_list, feature_label_list, unknown_word_name, unknown_word_len
 
 if __name__ == '__main__':
     pass

@@ -2,24 +2,26 @@ import os
 import numpy as np
 import torch
 from tqdm import tqdm
-
-from dataloaders.dataloader import build_test_dataloader
-from model.net import LSTMNet
-from model.criterion import build_criterion
-
 from sklearn.metrics import average_precision_score, roc_auc_score, recall_score, precision_score
 from sklearn.metrics import precision_recall_curve, roc_curve
-
 import matplotlib.pyplot as plt
+
+from dataloaders.dataloader import build_valid_dataloader,  build_test_dataloader
+from model.net import Net
+from model.criterion import build_criterion
 
 class Tester(object):
 
     def __init__(self, args):
         self.args = args
         kargs = {'num_workers': args.workers}
-        self.test_loader = build_test_dataloader(args, **kargs)
 
-        self.model = LSTMNet(args) # 定义网络
+        if args.test_set == "valid":
+            self.test_loader = build_valid_dataloader(args, **kargs)
+        else:
+            self.test_loader = build_test_dataloader(args, **kargs)
+
+        self.model = Net(args) # 定义网络
         self.criterion = build_criterion(args)
     
         if args.cuda:
@@ -56,23 +58,21 @@ class Tester(object):
             total_target = np.append(total_target, label.cpu().numpy())
             epoch_num += 1
 
+        sort_index = np.argsort(-total_pred)
+        total_pred = total_pred[sort_index]
+        total_target = total_target[sort_index]
+
         roc_auc = roc_auc_score(total_target, total_pred)
         pr_auc = average_precision_score(total_target, total_pred)
-        # print("ROC-AUC: %.4f, PR-AUC: %.4f." % (roc_auc, pr_auc))
 
-        precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.plot(recall, precision)
-        ax.set_xlabel('Recall')
-        ax.set_ylabel('Precision')
-        ax.set_title('PR Curve')
-        figures_dir = os.path.join(self.args.experiment_dir, "figures")
-        plt.savefig(os.path.join(figures_dir, f'pr_curve-test.png'), bbox_inches='tight')
-        
-        # rscore = recall_score(total_target , total_pred)
-        # pscore = precision_score(total_target, total_pred)
-        # print("ROC-AUC: %.4f, PR-AUC: %.4f, RSCORE: %.4f, PSCORE: %.4f." % (roc_auc, pr_auc, rscore, pscore))
+        # precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
+        # fig = plt.figure()
+        # ax = fig.add_subplot(111)
+        # ax.plot(recall, precision)
+        # ax.set_xlabel('Recall')
+        # ax.set_ylabel('Precision')
+        # ax.set_title('PR Curve')
+        # figures_dir = os.path.join(self.args.experiment_dir, "figures")
+        # plt.savefig(os.path.join(figures_dir, f'pr_curve-test.png'), bbox_inches='tight')
 
-        return roc_auc, pr_auc, test_loss / epoch_num
-        # return roc_auc, pr_auc, rscore, pscore, test_loss
+        return roc_auc, pr_auc, test_loss / epoch_num, total_target, total_pred

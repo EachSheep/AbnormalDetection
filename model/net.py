@@ -6,10 +6,10 @@ from model.backbone.lstm import LSTM_with_Attention, LSTM, RNN
 from model.backbone.transformer import TransformerEncoder, TransformerDecoder, Transformer
 
 
-class LSTMNet(nn.Module):
+class Net(nn.Module):
     def __init__(self, args):
 
-        super(LSTMNet, self).__init__()
+        super(Net, self).__init__()
         self.args = args
         if self.args.backbone == "lstma":
             self.feature_extractor = LSTM_with_Attention(

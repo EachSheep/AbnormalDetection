@@ -5,6 +5,8 @@ import torch
 parser = argparse.ArgumentParser()
 
 # 当前实验设置
+parser.add_argument('-root', type=str,
+                    default='./', help="project root")  # 项目根目录
 parser.add_argument("-random_seed", type=int, default=42,
                     help="the random seed number")
 parser.add_argument('-experiment_dir', type=str, default='./experiment',
@@ -19,8 +21,6 @@ parser.add_argument('--no_cuda', action='store_true',
                     default=False, help='disables CUDA training')
 
 # 数据集设置
-parser.add_argument('-root', type=str,
-                    default='./', help="project root")  # 项目根目录
 parser.add_argument('-dataset_root', type=str,
                     default='./data/preprocess/', help="dataset root")  # 数据集存放的根目录
 parser.add_argument('-file_name_abnormal', type=str, default='feedback.csv',
@@ -37,6 +37,10 @@ parser.add_argument('-max_seq_len', type=int, default=200,
                     help="vocab dict path")  # 页面->id的字典存放路径
 parser.add_argument('-train_ratio', type=float, default=0.8,
                     help="train test split ratio")  # 训练集和测试集划分的比例
+
+# 模型测试设置
+parser.add_argument('-test_set', type=str, default="valid",
+                    help="use valid set or test set, valid or test")  # 使用训练集中划分出来的测试集测试还是使用新的测试集测试
 
 # 模型设置
 parser.add_argument('-backbone', type=str, default='lstma',

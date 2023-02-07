@@ -5,7 +5,7 @@ from tqdm import tqdm
 import time
 
 from dataloaders.dataloader import build_train_dataloader
-from model.net import LSTMNet
+from model.net import Net
 from model.criterion import build_criterion
 
 from sklearn.metrics import average_precision_score, roc_auc_score, recall_score, precision_score
@@ -20,7 +20,7 @@ class Trainer(object):
         self.train_loader, self.test_loader = build_train_dataloader(args, **kargs)
         self.train_num = len(self.train_loader.dataset)
 
-        self.model = LSTMNet(args) # 定义网络
+        self.model = Net(args) # 定义网络
         self.criterion = build_criterion(args)
         if args.optimizer == "Adam":
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -95,10 +95,13 @@ class Trainer(object):
             total_pred = np.append(total_pred, output.data.cpu().numpy())
             total_target = np.append(total_target, label.cpu().numpy())
 
+        sort_index = np.argsort(-total_pred)
+        total_pred = total_pred[sort_index]
+        total_target = total_target[sort_index]
+
         cur_epoch_loss = test_loss / (i + 1)
         roc_auc = roc_auc_score(total_target, total_pred)
         pr_auc = average_precision_score(total_target, total_pred)
-        print("ROC-AUC: %.4f, PR-AUC: %.4f." % (roc_auc, pr_auc))
 
         # rscore = recall_score(total_target , total_pred)
         # pscore = precision_score(total_target, total_pred)
@@ -115,11 +118,7 @@ class Trainer(object):
 
         return roc_auc, pr_auc, cur_epoch_loss, total_target, total_pred
 
-    def save_weights(self, filename = None):
-        model_dir = os.path.join(self.args.experiment_dir, 'models')
-        if os.path.exists(model_dir) == False:
-            os.makedirs(model_dir)
-        if filename == None:
-            torch.save(self.model.state_dict(), os.path.join(model_dir, self.args.weight_name))
-        else:
-            torch.save(self.model.state_dict(), os.path.join(model_dir, filename))
+    def save_weights(self, model_path):
+        if not os.path.exists(os.path.dirname(model_path)):
+            os.makedirs(os.path.dirname(model_path))
+        torch.save(self.model.state_dict(), model_path)
