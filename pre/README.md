@@ -77,7 +77,8 @@ python g_word_dict.py -page2num_dir ../data/page2nums/ \
 ```bash
 python g_word_dict.py -page2num_dir ../data/page2nums/ \
                       -page2num_names page2num-1.json \
-                      --simulate
+                      --simulate \
+                      -output_dir_word_dict ../data/assets/
 ```
 
 ## run g_page_code.py
