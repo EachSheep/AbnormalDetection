@@ -119,12 +119,12 @@ python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 -file_name_normal normal.csv \
                 --use_cache \
                 -data_type pageuser \
-                -max_seq_len 250 \
+                -max_seq_len 300 \
                 -vocab_dict_path data/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone transformer \
-                -embedding_dim 280 \
-                -ffn_num_hiddens 200 \
+                -embedding_dim 380 \
+                -ffn_num_hiddens 300 \
                 -num_heads 4 \
                 -num_layers 2 \
                 -dropout 0.5 \

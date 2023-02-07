@@ -1,4 +1,5 @@
 import logging
+import os
 
 def set_logger(log_dir):
     logger = logging.getLogger()
