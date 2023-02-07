@@ -2,6 +2,15 @@
 
 ## run prepreprocess.py
 
+真实跑的时候（xxx改成文件所在目录，两个文件分别重命名为feedback.csv和normal.csv）：
+```bash
+python prepreprocess.py -in_dir_prepre xxx \
+                        -feedback_names_prepre feedback.csv  \
+                        -normal_names_prepre normal.csv  \
+                        -output_dir_prepre ../data/prepreprocess/
+```
+
+模拟时候：
 ```bash
 python prepreprocess.py -in_dir_prepre ../data/datasets/ \
                         -feedback_names_prepre feedback.csv  \
@@ -16,8 +25,19 @@ python prepreprocess.py -in_dir_prepre ../data/datasets/ \
 
 ## run g_page2num.py
 
-首先生成page2num.json文件（已经生成，不用管）
+首先生成page2num.json文件，**注意：该文件已经生成，不用管下面的命令！！！**
 
+真实跑的时候：
+```bash
+python g_page2num.py -in_dir_gen ../data/prepreprocess/ \
+                     -feedback_names_gen feedback.csv  \
+                     -normal_names_gen normal.csv  \
+                     -output_dir_gen ../data/page2nums/ \
+                     -page2num_names_gen page2num-2.json
+```
+
+
+模拟时候：
 ```bash
 python g_page2num.py -in_dir_gen ../data/prepreprocess/ \
                      -feedback_names_gen feedback.csv  \
@@ -28,30 +48,55 @@ python g_page2num.py -in_dir_gen ../data/prepreprocess/ \
 
 ## run g_lastword_dict.py
 
-根据page2num-simulate.json生成lastword_dict.json
+**注意：该文件已经生成，不用管下面的命令！！！**
 
+**给页面进行编码：**
+
+真实跑的时候：
+```bash
+python g_lastword_dict.py -page2num_dir ../data/page2nums/ \
+                        -page2num_names page2num-1.json
+```
+
+模拟时候：根据 page2num-1.json和page2num-simulate.json生成lastword_dict.json，
 ```bash
 python g_lastword_dict.py -page2num_dir ../data/page2nums/ \
                         -page2num_names page2num-1.json \
                         --simulate
 ```
 
-## run g_code.py
+**给单词进行编码：**
 
-然后根据page2num.json文件生成页面的编码
-
-liyue跑这个代码：
-
+真实跑的时候：
 ```bash
-python g_code.py -lastword_dict_dir ../data/page2nums/ \
+python g_word_dict.py -page2num_dir ../data/page2nums/ \
+                        -page2num_names page2num-1.json
+```
+
+模拟时候：根据 page2num-1.json和page2num-simulate.json生成word_dict.json，
+```bash
+python g_word_dict.py -page2num_dir ../data/page2nums/ \
+                      -page2num_names page2num-1.json \
+                      --simulate \
+                      -output_dir_word_dict ../data/assets/
+```
+
+## run g_page_code.py
+
+**给页面进行编码：**
+
+然后根据lastword_dict.json文件生成页面的编码.
+
+真实跑的时候：
+```bash
+python g_page_code.py -lastword_dict_dir ../data/page2nums/ \
                 -lastword_dict_name lastword_dict.json \
                 -output_dir_lastword_dict ../data/assets/
 ```
 
-模拟的时候跑的代码。
-
+模拟时候：
 ```bash
-python g_code.py -lastword_dict_dir ../data/page2nums/ \
+python g_page_code.py -lastword_dict_dir ../data/page2nums/ \
                 -lastword_dict_name lastword_dict.json \
                 -output_dir_lastword_dict ../data/assets/ \
                 --simulate
@@ -70,9 +115,9 @@ python preprocess.py -in_dir_pre ../data/prepreprocess/ \
                      -output_dir_pre ../data/preprocess/
 ```
 
+# 其它
 
-
-## run draw.py
+## run draw.py：绘图
 
 ```bash
 python draw.py -in_dir ../data/prepreprocess \

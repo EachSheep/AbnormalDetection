@@ -31,11 +31,12 @@ parser.add_argument('-page2num_names_gen', nargs='+', default=["page2num-simulat
 # g_lastword_dict.py的参数
 parser.add_argument('-page2num_dir', type=str, default='../data/page2nums/', help="orgin directory of page2num")  # page2num的原目录
 parser.add_argument('-page2num_names', nargs='+', default=['page2num-1.json'], help="orgin filename of page2num")  # page2num的原文件
-
 parser.add_argument('--simulate', action='store_true',
                     default=False, help='if simulate or not')
+# g_word_dict.py除了和g_lastword_dict.py一样的参数外，还有
+parser.add_argument('-output_dir_word_dict', type=str, default="../data/assets/", help='output directory') # 
 
-# g_code.py的参数
+# g_page_code.py的参数
 parser.add_argument('-lastword_dict_dir', type=str, default='../data/page2nums/', help="orgin directory of lastword_dict")  # lastword_dict的原目录
 parser.add_argument('-lastword_dict_name', type=str, default='lastword_dict.json', help="orgin filename of lastword_dict")  # lastword_dict的原文件
 parser.add_argument('-output_dir_lastword_dict', type=str, default="../data/assets/", help='output directory') # 
