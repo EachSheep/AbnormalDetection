@@ -33,7 +33,7 @@ python g_page2num.py -in_dir_gen ../data/prepreprocess/ \
                      -feedback_names_gen feedback.csv  \
                      -normal_names_gen normal.csv  \
                      -output_dir_gen ../data/page2nums/ \
-                     -page2num_names_gen page2num-2.json
+                     -page2num_names_gen page2num-1.json
 ```
 
 
