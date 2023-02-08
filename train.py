@@ -58,6 +58,9 @@ if __name__ == '__main__':
     model_path = os.path.join(args.experiment_dir, 'models', args.weight_name)
 
     cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict = tester.eval(state_dict_path = model_path)
+    np.save(os.path.join(summarywriter_dir, 'valid_label.npy'), cur_label)
+    np.save(os.path.join(summarywriter_dir, 'valid_predict.npy'), cur_predict)
+
     for i in range(1000, len(cur_label), 1000):
         label, predict = cur_label[:i], cur_predict[:i]
         try:
@@ -74,6 +77,6 @@ if __name__ == '__main__':
                 writer.add_scalar("valid/ValueError", 0, i)
 
     writer.add_pr_curve(f"valid/pr_curve-valid-100", cur_label[:100], cur_predict[:100])
-
+    
     writer.flush()
     writer.close()
