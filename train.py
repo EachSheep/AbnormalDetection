@@ -58,7 +58,7 @@ if __name__ == '__main__':
     model_path = os.path.join(args.experiment_dir, 'models', args.weight_name)
 
     cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict = tester.eval(state_dict_path = model_path)
-    for i in range(50, len(cur_label)):
+    for i in range(1000, len(cur_label), 1000):
         label, predict = cur_label[:i], cur_predict[:i]
         try:
             cur_roc = roc_auc_score(label, predict)
