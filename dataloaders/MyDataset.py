@@ -1,6 +1,7 @@
 from torch.utils.data import Dataset
 import torch
 
+
 class MyDataset(Dataset):
     """载入自定义数据集
     Args:
@@ -13,25 +14,31 @@ class MyDataset(Dataset):
     def __init__(self, args, data, label, **kwargs):
         super(MyDataset).__init__()
         self.args = args
-        self.data = data # 一个向量，对应一个标签
+        self.data = data  # 一个向量，对应一个标签
         self.label = label
-        self.kwargs = kwargs # 包含每个数据的长度（len），每个数据的session_id（sid），每个数据的user_id（uid）
+        self.kwargs = kwargs  # 包含每个数据的长度（len），每个数据的session_id（sid），每个数据的user_id（uid）
 
         self.idx = torch.arange(len(self.data))
         self.normal_idx = torch.argwhere(self.label == 0).flatten()
         self.outlier_idx = torch.argwhere(self.label == 1).flatten()
 
         self.valid_lens = self.kwargs['valid_lens']
+        self.uid = self.kwargs['uid']
+        self.sid = self.kwargs['sid']
 
     def __len__(self):
         return len(self.data)
 
     def normal_num(self):
         return len(self.normal_idx)
-    
+
     def abnormal_num(self):
         return len(self.outlier_idx)
 
     def __getitem__(self, index):
-        sample = {'data': self.data[index], 'label': self.label[index], 'valid_lens': self.valid_lens[index]}
+        # print(index)
+        # print(self.uid[index])
+        # print(self.sid[index])
+        sample = {'data': self.data[index], 'label': self.label[index], 'valid_lens': self.valid_lens[index],
+                  'uid': self.uid[index], 'sid': self.sid[index]}
         return sample

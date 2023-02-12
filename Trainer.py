@@ -80,8 +80,11 @@ class Trainer(object):
         tbar = tqdm(self.test_loader, desc='\r')
         total_pred = np.array([])
         total_target = np.array([])
+        total_uid = np.array([])
+        total_sid = np.array([])
         for i, sample in enumerate(tbar):
             batch_data, label, valid_lens = sample['data'], sample['label'], sample['valid_lens']
+            uid, sid = sample['uid'], sample['sid']
             if self.args.cuda:
                 batch_data, label, valid_lens = batch_data.cuda(), label.cuda(), valid_lens.cuda()
 
@@ -94,14 +97,22 @@ class Trainer(object):
             
             total_pred = np.append(total_pred, output.data.cpu().numpy())
             total_target = np.append(total_target, label.cpu().numpy())
+            total_uid = np.append(total_uid, uid)
+            total_sid = np.append(total_sid, sid)
 
         sort_index = np.argsort(-total_pred)
         total_pred = total_pred[sort_index]
         total_target = total_target[sort_index]
+        total_uid = total_uid[sort_index]
+        total_sid = total_sid[sort_index]
 
         cur_epoch_loss = test_loss / (i + 1)
-        roc_auc = roc_auc_score(total_target, total_pred)
-        pr_auc = average_precision_score(total_target, total_pred)
+        try:
+            roc_auc = roc_auc_score(total_target, total_pred)
+            pr_auc = average_precision_score(total_target, total_pred)
+        except:
+            roc_auc = 0
+            pr_auc = 0
 
         # rscore = recall_score(total_target , total_pred)
         # pscore = precision_score(total_target, total_pred)
@@ -116,7 +127,7 @@ class Trainer(object):
         # figures_dir = os.path.join(self.args.experiment_dir, "figures")
         # plt.savefig(os.path.join(figures_dir, f'pr_curve-valid-{epoch}-{self.args.cur_time}.png'), bbox_inches='tight')
 
-        return roc_auc, pr_auc, cur_epoch_loss, total_target, total_pred
+        return roc_auc, pr_auc, cur_epoch_loss, total_target, total_pred, total_uid, total_sid
 
     def save_weights(self, model_path):
         if not os.path.exists(os.path.dirname(model_path)):

@@ -124,3 +124,18 @@ python draw.py -in_dir ../data/prepreprocess \
                -feedback_names feedback.csv  \
                -normal_names normal.csv
 ```
+
+## run g_page2num_separately.py
+
+此文件用于辅助筛选出ground truth。
+
+首先生成page2num_normal.json文件，生成page2num_feedback.json文件。
+
+真实跑的时候：
+```bash
+python g_page2num_separately.py -in_dir_gen ../data/prepreprocess/ \
+                                -feedback_names_gen feedback.csv  \
+                                -normal_names_gen normal.csv  \
+                                -output_dir_gen ../data/page2nums/ \
+                                -page2num_names_gen page2num-1.json
+```

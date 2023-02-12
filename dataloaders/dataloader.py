@@ -180,6 +180,12 @@ def prepare_train_data(args, **kwargs):
         torch.save(valid_label, os.path.join(
             args.experiment_dir, 'cache', f'valid_label.pkl'))
 
+        train_sid = train_sid['session_id'].values
+        train_uid = train_uid['user_id'].values
+
+        valid_sid = valid_sid['session_id'].values
+        valid_uid = valid_uid['user_id'].values
+
     return train_data, train_len, train_sid, train_uid, train_label, valid_data, valid_len, valid_sid, valid_uid, valid_label
 
 
@@ -241,6 +247,9 @@ def prepare_valid_data(args, **kwargs):
         args.experiment_dir, 'cache', f'valid_uid.csv'))
     valid_label = torch.load(os.path.join(
         args.experiment_dir, 'cache', f'valid_label.pkl'))
+    
+    valid_sid = valid_sid['session_id'].values
+    valid_uid = valid_uid['user_id'].values
 
     return valid_data, valid_len, valid_sid, valid_uid, valid_label
 
@@ -342,6 +351,9 @@ def prepare_test_data(args, **kwargs):
             args.experiment_dir, 'cache', f'test_uid.csv'), index=False)
         torch.save(test_label, os.path.join(
             args.experiment_dir, 'cache', f'test_label.pkl'))
+
+        test_sid = test_sid['session_id'].values
+        test_uid = test_uid['user_id'].values
 
     return test_data, test_len, test_sid, test_uid, test_label
 

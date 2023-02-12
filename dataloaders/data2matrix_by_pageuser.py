@@ -157,7 +157,6 @@ def prepare_abnormal_data(args, **kwargs):
         feature_uid_list, columns=['user_id'])  # shape: [batch_size]
     feature_label_list = torch.ones(
         feature_list.shape[0], dtype=feature_list.dtype)  # shape: [batch_size]
-
     unknown_page_name = collections.Counter(unknown_page_name)
     unknown_page_len = collections.Counter(unknown_page_len)
     return feature_list, feature_len_list, feature_sid_list, feature_uid_list, feature_label_list, unknown_page_name, unknown_page_len

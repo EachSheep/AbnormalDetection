@@ -41,12 +41,13 @@ if __name__ == '__main__':
         writer.add_scalars("mini-valid/loss", {"train" : cur_train_loss}, cur_epoch)
         
         if (cur_epoch + 1) % 5 == 0:
-            cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict  = trainer.eval(cur_epoch)
+            cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict, total_uid, total_sid  = trainer.eval(cur_epoch)
             logger.info("ROC-AUC: %.4f, PR-AUC: %.4f, VALID LOSS: %.4f" % (cur_roc, cur_pr, cur_test_loss))
             writer.add_scalars("mini-valid/loss", {"loss_valid" : cur_train_loss}, cur_epoch)
             writer.add_scalar("mini-valid/roc", cur_roc, cur_epoch)
             writer.add_scalar("mini-valid/pr", cur_pr, cur_epoch)
             writer.add_pr_curve(f"mini-valid/pr_curve-{cur_epoch}", cur_label, cur_predict, global_step=cur_epoch)
+
     end_time = time.time()
     args.train_time_per_epoch = "{:.3f}".format((end_time - begin_time) / args.epochs)
     setting_path = os.path.join(summarywriter_dir, 'train_setting.json')
@@ -56,27 +57,28 @@ if __name__ == '__main__':
     # valid
     tester = Tester(args)
     model_path = os.path.join(args.experiment_dir, 'models', args.weight_name)
-
-    cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict = tester.eval(state_dict_path = model_path)
+    cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict, total_uid, total_sid = tester.eval(state_dict_path = model_path)
     np.save(os.path.join(summarywriter_dir, 'valid_label.npy'), cur_label)
     np.save(os.path.join(summarywriter_dir, 'valid_predict.npy'), cur_predict)
+    np.save(os.path.join(summarywriter_dir, 'valid_uid.npy'), total_uid)
+    np.save(os.path.join(summarywriter_dir, 'valid_sid.npy'), total_sid)
 
-    for i in range(1000, len(cur_label), 1000):
-        label, predict = cur_label[:i], cur_predict[:i]
-        try:
-            cur_roc = roc_auc_score(label, predict)
-            cur_pr = average_precision_score(label, predict)
-            writer.add_scalar("valid/roc", cur_roc, i)
-            writer.add_scalar("valid/pr", cur_pr, i)
-            logger.info("i: %d, ROC-AUC: %.4f, PR-AUC: %.4f" % (i, cur_roc, cur_pr))
-        except ValueError:
-            # ValueError: Only one class present in y_true. ROC AUC score is not defined in that case.
-            if len(np.unique(label)) == 1 and label[0] == 1:  
-                writer.add_scalar("valid/ValueError", 1, i)
-            else:
-                writer.add_scalar("valid/ValueError", 0, i)
+    # for i in range(1000, len(cur_label), 1000):
+    #     label, predict = cur_label[:i], cur_predict[:i]
+    #     try:
+    #         cur_roc = roc_auc_score(label, predict)
+    #         cur_pr = average_precision_score(label, predict)
+    #         writer.add_scalar("valid/roc", cur_roc, i)
+    #         writer.add_scalar("valid/pr", cur_pr, i)
+    #         logger.info("i: %d, ROC-AUC: %.4f, PR-AUC: %.4f" % (i, cur_roc, cur_pr))
+    #     except ValueError:
+    #         # ValueError: Only one class present in y_true. ROC AUC score is not defined in that case.
+    #         if len(np.unique(label)) == 1 and label[0] == 1:  
+    #             writer.add_scalar("valid/ValueError", 1, i)
+    #         else:
+    #             writer.add_scalar("valid/ValueError", 0, i)
 
-    writer.add_pr_curve(f"valid/pr_curve-valid-100", cur_label[:100], cur_predict[:100])
-    
+    # writer.add_pr_curve(f"valid/pr_curve-valid-100", cur_label[:100], cur_predict[:1000])
+
     writer.flush()
     writer.close()
