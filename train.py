@@ -43,7 +43,7 @@ if __name__ == '__main__':
         writer.add_scalars("mini-valid/loss", {"train" : cur_train_loss}, cur_epoch)
         
         if (cur_epoch + 1) % 5 == 0:
-            cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict, total_uid, total_sid  = trainer.eval(cur_epoch)
+            cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict, total_uid  = trainer.eval(cur_epoch)
             logger.info("ROC-AUC: %.4f, PR-AUC: %.4f, VALID LOSS: %.4f" % (cur_roc, cur_pr, cur_test_loss))
             writer.add_scalars("mini-valid/loss", {"loss_valid" : cur_train_loss}, cur_epoch)
             writer.add_scalar("mini-valid/roc", cur_roc, cur_epoch)
@@ -59,11 +59,10 @@ if __name__ == '__main__':
     # valid
     tester = Tester(args)
     model_path = os.path.join(args.experiment_dir, 'models', args.weight_name)
-    cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict, total_uid, total_sid = tester.eval(state_dict_path = model_path)
+    cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict, total_uid = tester.eval(state_dict_path = model_path)
     np.save(os.path.join(summarywriter_dir, 'valid_label.npy'), cur_label)
     np.save(os.path.join(summarywriter_dir, 'valid_predict.npy'), cur_predict)
     np.save(os.path.join(summarywriter_dir, 'valid_uid.npy'), total_uid)
-    np.save(os.path.join(summarywriter_dir, 'valid_sid.npy'), total_sid)
 
     # for i in range(1000, len(cur_label), 1000):
     #     label, predict = cur_label[:i], cur_predict[:i]

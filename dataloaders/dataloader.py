@@ -208,18 +208,6 @@ def build_train_dataloader(args, **kwargs):
     """
     train_data, train_len, train_sid, train_uid, train_label, valid_data, valid_len, valid_sid, valid_uid, valid_label = prepare_train_data(
         args, **kwargs)
-    # 查看数据的基本类型和shape
-    print("train_data: ", train_data.shape, train_data.dtype)
-    print("train_len: ", train_len.shape, train_len.dtype)
-    print("train_sid: ", train_sid.shape, train_sid.dtype)
-    print("train_uid: ", train_uid.shape, train_uid.dtype)
-    print("train_label: ", train_label.shape, train_label.dtype)
-    print("valid_data: ", valid_data.shape, valid_data.dtype)
-    print("valid_len: ", valid_len.shape, valid_len.dtype)
-    print("valid_sid: ", valid_sid.shape, valid_sid.dtype)
-    print("valid_uid: ", valid_uid.shape, valid_uid.dtype)
-    print("valid_label: ", valid_label.shape, valid_label.dtype)
-    input()
     train_set = MyDataset(args, train_data, train_label,
                           **{"valid_lens": train_len, "sid": train_sid, "uid": train_uid})
     valid_set = MyDataset(args, valid_data, valid_label, **

@@ -21,12 +21,11 @@ if __name__ == '__main__':
     logger = set_logger(summarywriter_dir)
     model_path = os.path.join(args.experiment_dir, 'models', args.weight_name)
 
-    cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict, total_uid, total_sid = tester.eval(
+    cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict, total_uid = tester.eval(
         state_dict_path=model_path)
     np.save(os.path.join(summarywriter_dir, 'valid_label.npy'), cur_label)
     np.save(os.path.join(summarywriter_dir, 'valid_predict.npy'), cur_predict)
     np.save(os.path.join(summarywriter_dir, 'valid_uid.npy'), total_uid)
-    np.save(os.path.join(summarywriter_dir, 'valid_sid.npy'), total_sid)
 
     # for i in range(1000, len(cur_label), 1000):
     #     label, predict = cur_label[:i], cur_predict[:i]

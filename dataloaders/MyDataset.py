@@ -36,9 +36,6 @@ class MyDataset(Dataset):
         return len(self.outlier_idx)
 
     def __getitem__(self, index):
-        # print(index)
-        # print(self.uid[index])
-        # print(self.sid[index])
         sample = {'data': self.data[index], 'label': self.label[index], 'valid_lens': self.valid_lens[index],
-                  'uid': self.uid[index], 'sid': self.sid[index]}
+                  'uid': self.uid[index]}
         return sample
