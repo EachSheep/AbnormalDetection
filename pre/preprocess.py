@@ -43,6 +43,7 @@ def preprocess(in_dir, normal_names, feedback_names, output_dir, **kwargs):
 
         # 去除nan, 预处理, 筛选过少轨迹的用户
         def tmp(normal):
+            normal = normal.dropna()
             normal['page_name'] = normal['page_name'].map(url_preprocess)
             
             df_normal_cnt = normal.groupby("session_id")['unique_id'].count()
