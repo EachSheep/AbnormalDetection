@@ -21,14 +21,16 @@ if __name__ == '__main__':
     if not os.path.exists(runs_dir):
         os.makedirs(runs_dir)
     summarywriter_dir = os.path.join(runs_dir, 'train')
+    if not os.path.exists(summarywriter_dir):
+        os.makedirs(summarywriter_dir)
     if os.path.exists(summarywriter_dir):
         for root, dirs, files in os.walk(summarywriter_dir, topdown=False):
             for name in files:
                 os.remove(os.path.join(root, name))
             for name in dirs:
                 os.rmdir(os.path.join(root, name))
-        os.rmdir(summarywriter_dir)
-        os.makedirs(summarywriter_dir)
+        # os.rmdir(summarywriter_dir)
+        # os.makedirs(summarywriter_dir)
     writer = SummaryWriter(summarywriter_dir)
     logger = set_logger(summarywriter_dir)
     
