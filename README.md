@@ -14,7 +14,7 @@ Or follow instructions in requirements.txt to install.
 
 ```bash
 # 第一次运行时生成cache文件，注意！！！更改max_seq_len之后需要去掉--cache重新运行一遍
-python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
@@ -32,7 +32,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 -train_ratio 0.8
 
 # 之后的运行可以指定cache参数。
-python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
@@ -64,7 +64,7 @@ transformer为backbone。
 
 ```bash
 # 第一次运行时生成cache文件，注意！！！更改max_seq_len之后需要去掉--cache重新运行一遍
-python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
@@ -85,7 +85,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
                 -train_ratio 0.8
 
 # 之后的运行可以指定cache参数。
-python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
@@ -113,7 +113,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
 
 第一次运行不加上--use_cache选项以生成cache，之后加上--use_cache选项。
 ```bash
-python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
@@ -140,7 +140,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
 
 第一次运行不加上--use_cache选项以生成cache，之后加上--use_cache选项。
 ```bash
-python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
@@ -166,9 +166,9 @@ python train.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/
 ## Test
 
 
-注意！！！用什么样子的参数训练，就要用什么u样子的参数测试。
+注意！！！用什么样子的参数训练，就要用什么样子的参数测试。
 ```bash
-python test.py -dataset_root=/home/hiyoungshen/Source/deviation-network-fliggy/data/preprocess/ \
+python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \

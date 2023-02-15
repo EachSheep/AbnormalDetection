@@ -10,7 +10,7 @@ print("current login user:", cur_login_user)
 cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
 print('cur_time:', cur_time)
 cur_abs_working_directory = os.path.abspath(
-    "/home/{}/Source/deviation-network-fliggy/".format(cur_login_user))  # 设置当前项目的工作目录
+    "/home/{}/Source/ICWS2023/AbnormalDetection/".format(cur_login_user))  # 设置当前项目的工作目录
 os.chdir(cur_abs_working_directory)
 print("current working directory:", os.getcwd())
 

@@ -49,6 +49,7 @@ def preprocess(in_dir, normal_names, feedback_names, output_dir, **kwargs):
             df_normal_sel_id = df_normal_cnt[df_normal_cnt >= min_seq_len]
             normal = normal[normal['session_id'].isin(
                 df_normal_sel_id.index)]
+            normal = normal.dropna()
             return normal
 
         normal = tmp(normal)

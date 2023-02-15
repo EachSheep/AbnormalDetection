@@ -35,6 +35,8 @@ def prepare_normal_data(args, **kwargs):
     max_seq_len = args.max_seq_len
 
     df_normal= tmp_prepare_data(args.dataset_root, args.file_name_normal)
+    # 删除null行
+    # df_normal = df_normal.dropna()
     print('正常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_normal))
 
     # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]
@@ -111,6 +113,8 @@ def prepare_abnormal_data(args, **kwargs):
     max_seq_len = args.max_seq_len
 
     df_abnormal= tmp_prepare_data(args.dataset_root, args.file_name_abnormal)
+    # 删除null行
+    # df_abnormal = df_abnormal.dropna()
     print('异常用户：根据session中的页面筛选前用户的轨迹数为：', len(df_abnormal))
 
     # 建立每一个session的id序列，比如两个session，总的页面数是3，那么生成一个二维列表[[1,2,0], [3,4,len(all_page_name)]]

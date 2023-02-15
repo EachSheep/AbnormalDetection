@@ -29,4 +29,5 @@ def url_preprocess(url):
             return url
         return '/'.join(url.split('/')[: -1])
     else:
+        # 正则表达式匹配非url
         return url
