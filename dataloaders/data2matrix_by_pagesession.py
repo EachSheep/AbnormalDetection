@@ -10,7 +10,7 @@ import collections
 def tmp_prepare_data(in_dir, file_name):
     normal_data_path = os.path.join(in_dir, file_name)
     df = pd.read_csv(normal_data_path)
-    df["date_time"] = pd.to_datetime(df["date_time"])
+    # df["date_time"] = pd.to_datetime(df["date_time"])
     df = df.reset_index()
     df.rename(columns={"index": "unique_id"}, inplace=True)
     return df
@@ -45,7 +45,8 @@ def prepare_normal_data(args, **kwargs):
     feature_len_list = []
     feature_sid_list = []  # session_id
     feature_uid_list = []  # user_id
-    df_normal.sort_values(['date_time'], ascending=[True], inplace=True)
+    # df_normal.sort_values(['date_time'], ascending=[True], inplace=True)
+    df_normal.sort_values(['sort_source'], ascending=[True], inplace=True)
     for n, en in df_normal.groupby("session_id"):
         feature_sid_list.append(n)
         cur_feature = []
@@ -121,7 +122,8 @@ def prepare_abnormal_data(args, **kwargs):
     feature_len_list = []
     feature_sid_list = []
     feature_uid_list = []
-    df_abnormal.sort_values(['date_time'], ascending=[True], inplace=True)
+    # df_abnormal.sort_values(['date_time'], ascending=[True], inplace=True)
+    df_abnormal.sort_values(['sort_source'], ascending=[True], inplace=True)
     for n, en in df_abnormal.groupby("session_id"):
         feature_sid_list.append(n)
         cur_feature = []

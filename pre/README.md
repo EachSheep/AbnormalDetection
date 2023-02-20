@@ -36,7 +36,6 @@ python g_page2num.py -in_dir_gen ../data/prepreprocess/ \
                      -page2num_names_gen page2num-1.json
 ```
 
-
 模拟时候：
 ```bash
 python g_page2num.py -in_dir_gen ../data/prepreprocess/ \
@@ -125,17 +124,20 @@ python draw.py -in_dir ../data/prepreprocess \
                -normal_names normal.csv
 ```
 
-## run g_page2num_separately.py
+## run g_lowercase2uppercase.py
 
-此文件用于辅助筛选出ground truth。
-
-首先生成page2num_normal.json文件，生成page2num_feedback.json文件。
-
-真实跑的时候：
+真实跑的时候（xxx改成文件所在目录，两个文件分别重命名为feedback.csv和normal.csv）：
 ```bash
-python g_page2num_separately.py -in_dir_gen ../data/prepreprocess/ \
-                                -feedback_names_gen feedback.csv  \
-                                -normal_names_gen normal.csv  \
-                                -output_dir_gen ../data/page2nums/ \
-                                -page2num_names_gen page2num-1.json
+python g_lowercase2uppercase.py -in_dir_prepre xxx \
+                        -feedback_names_prepre feedback.csv  \
+                        -normal_names_prepre normal.csv  \
+                        -output_dir_prepre ../data/assets/
+```
+
+模拟时候：
+```bash
+python g_lowercase2uppercase.py -in_dir_prepre ../data/datasets/ \
+                        -feedback_names_prepre feedback.csv  \
+                        -normal_names_prepre normal.csv  \
+                        -output_dir_prepre ../data/assets/
 ```

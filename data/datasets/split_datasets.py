@@ -21,7 +21,7 @@ if __name__ == "__main__":
     merged_data_path = os.path.abspath(os.path.join("data/datasets/", "merged.csv"))
     df_merged = pd.read_csv(merged_data_path)
 
-    df_merged["date_time"] = pd.to_datetime(df_merged.date_time)
+    # df_merged["date_time"] = pd.to_datetime(df_merged.date_time)
     # df_merged = df_merged.reset_index()
     # df_merged.rename(columns={"index": "unique_id"}, inplace=True)
 

@@ -18,11 +18,12 @@ def tmp_prepare_data(in_dir, file_name):
     """
     data_path = os.path.join(in_dir, file_name)
     df = pd.read_csv(data_path)
-    df["date_time"] = pd.to_datetime(df["date_time"])
+    # df["date_time"] = pd.to_datetime(df["date_time"])
     df = df.reset_index()
     df.rename(columns={"index": "unique_id"}, inplace=True)
     return df
 
+lowercase2uppercase = {}
 
 def url_prepreprocess(url):
     """预处理
@@ -33,6 +34,11 @@ def url_prepreprocess(url):
     # 筛除局域网内广播信息
     # index_list = [True if not re.match(r'^https?:\/\/(192\.168|10|172\.1[6-9]|172\.2[0-9]|172\.3[0-1])\.', url) else False for url in url_list]
     """
+    tmp_url = re.split(r'[^a-zA-Z]', url)
+    tmp_url = [cur for cur in tmp_url if cur]
+    global lowercase2uppercase
+    [lowercase2uppercase.setdefault(cur.lower(), cur) for cur in tmp_url if cur != cur.lower()]
+
     url = url.lower()
     # 去除url中的汉字, 去除所有的url中文编码, 去除所有逗号, 去除所有~
     url = re.sub(r'[\u4e00-\u9fa5]|%[a-fA-F\d]{2}|~|,', '', url)
@@ -114,6 +120,10 @@ if __name__ == "__main__":
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     prepreprocess(in_dir, normal_names, feedback_names, output_dir)
+    
+    # 保存lowercase2uppercase
+    with open(os.path.join(output_dir, "lowercase2uppercase.json"), "w") as f:
+        json.dump(lowercase2uppercase, f, indent=4)
 
     # file_path = "../data/page2nums/page2num-1.json"
     # json_data = json.load(open(file_path, "r"))

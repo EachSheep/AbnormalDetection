@@ -16,7 +16,7 @@ def tmp_prepare_data(in_dir, file_name):
     """
     data_path = os.path.join(in_dir, file_name)
     df = pd.read_csv(data_path)
-    df["date_time"] = pd.to_datetime(df["date_time"])
+    # df["date_time"] = pd.to_datetime(df["date_time"])
     df = df.reset_index()
     df.rename(columns={"index": "unique_id"}, inplace=True)
     return df

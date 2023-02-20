@@ -17,7 +17,7 @@ def tmp_prepare_data(in_dir, file_name):
     """
     data_path = os.path.join(in_dir, file_name)
     df = pd.read_csv(data_path)
-    df["date_time"] = pd.to_datetime(df["date_time"])
+    # df["date_time"] = pd.to_datetime(df["date_time"])
     df = df.reset_index()
     df.rename(columns={"index": "unique_id"}, inplace=True)
     return df
@@ -51,6 +51,24 @@ def preprocess(in_dir, normal_names, feedback_names, output_dir, **kwargs):
             zip(all_page_num.index, [int(value) for value in all_page_num.values]))
         json.dump(page2num, open(
             os.path.join(output_dir, page2num_name), "w"), indent=4)
+        del all, all_page_num, page2num
+        
+        # 生成page2num文件
+        normal = normal.groupby('page_name')[
+            'unique_id'].count().sort_values(ascending=False)
+        normal_p2n = dict(
+            zip(normal.index, [int(value) for value in normal.values]))
+        json.dump(normal_p2n, open(
+            os.path.join(output_dir, '.'.join(page2num_name.split('.')[:-1]) + "_normal.json"), "w"), indent=4)
+        del normal, normal_p2n
+
+        feedback = feedback.groupby('page_name')[
+            'unique_id'].count().sort_values(ascending=False)
+        feedback_p2n = dict(
+            zip(feedback.index, [int(value) for value in feedback.values]))
+        json.dump(feedback_p2n, open(
+            os.path.join(output_dir, '.'.join(page2num_name.split('.')[:-1]) + "_feedback.json"), "w"), indent=4)
+        del feedback, feedback_p2n
 
 
 if __name__ == "__main__":

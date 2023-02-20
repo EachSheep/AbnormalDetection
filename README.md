@@ -136,6 +136,31 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
                 -train_ratio 0.8
 ```
 
+调参
+```
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
+                -weight_name model.pkl \
+                -file_name_abnormal feedback.csv \
+                -file_name_normal normal.csv \
+                --use_cache \
+                -data_type pageuser \
+                -max_seq_len 300 \
+                -vocab_dict_path data/assets/page2idx.json \
+                -vocab_size 10000 \
+                -backbone transformer \
+                -embedding_dim 360 \
+                -ffn_num_hiddens 300 \
+                -num_heads 4 \
+                -num_layers 2 \
+                -dropout 0.5 \
+                -criterion BCE \
+                -lr 0.0002 \
+                -epochs 25 \
+                -steps_per_epoch 40 \
+                -batch_size 128 \
+                -train_ratio 0.8
+```
+
 ### 按照单词建立词典，而后建立向量
 
 第一次运行不加上--use_cache选项以生成cache，之后加上--use_cache选项。
@@ -173,12 +198,12 @@ python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
                 --use_cache \
-                -max_seq_len 200 \
+                -max_seq_len 300 \
                 -vocab_dict_path data/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone transformer \
-                -embedding_dim 280 \
-                -ffn_num_hiddens 200 \
+                -embedding_dim 380 \
+                -ffn_num_hiddens 300 \
                 -num_heads 4 \
                 -num_layers 2 \
                 -dropout 0.5 \

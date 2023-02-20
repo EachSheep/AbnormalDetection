@@ -107,6 +107,13 @@ class Trainer(object):
         try:
             roc_auc = roc_auc_score(total_target, total_pred)
             pr_auc = average_precision_score(total_target, total_pred)
+            precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
+            F1 = 2 * precision * recall / (precision + recall)
+            idx = np.argmax(F1)
+            best_thresholds = precision[idx]
+            best_precision = precision[idx]
+            best_recall = recall[idx]
+            best_F1 = F1[idx]
         except:
             roc_auc = 0
             pr_auc = 0
@@ -124,9 +131,15 @@ class Trainer(object):
         # figures_dir = os.path.join(self.args.experiment_dir, "figures")
         # plt.savefig(os.path.join(figures_dir, f'pr_curve-valid-{epoch}-{self.args.cur_time}.png'), bbox_inches='tight')
 
-        return roc_auc, pr_auc, cur_epoch_loss, total_target, total_pred, total_uid
+        return roc_auc, pr_auc, best_precision, best_recall, best_F1, cur_epoch_loss, total_target, total_pred, total_uid
 
     def save_weights(self, model_path):
         if not os.path.exists(os.path.dirname(model_path)):
             os.makedirs(os.path.dirname(model_path))
         torch.save(self.model.state_dict(), model_path)
+
+    def load_weights(self, model_path):
+        self.model.load_state_dict(torch.load(model_path))
+    
+    def get_weights(self):
+        return self.model.state_dict()

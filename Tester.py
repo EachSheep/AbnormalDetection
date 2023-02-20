@@ -69,6 +69,13 @@ class Tester(object):
         try:
             roc_auc = roc_auc_score(total_target, total_pred)
             pr_auc = average_precision_score(total_target, total_pred)
+            precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
+            F1 = 2 * precision * recall / (precision + recall)
+            idx = np.argmax(F1)
+            best_thresholds = precision[idx]
+            best_precision = precision[idx]
+            best_recall = recall[idx]
+            best_F1 = F1[idx]
         except:
             roc_auc = 0
             pr_auc = 0
@@ -83,4 +90,4 @@ class Tester(object):
         # figures_dir = os.path.join(self.args.experiment_dir, "figures")
         # plt.savefig(os.path.join(figures_dir, f'pr_curve-test.png'), bbox_inches='tight')
 
-        return roc_auc, pr_auc, test_loss / epoch_num, total_target, total_pred, total_uid
+        return roc_auc, pr_auc, best_precision, best_recall, best_F1,  test_loss / epoch_num, total_target, total_pred, total_uid
