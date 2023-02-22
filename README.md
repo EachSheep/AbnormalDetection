@@ -138,7 +138,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
 
 调参
 ```
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
+python tmp_train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
@@ -148,14 +148,14 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
                 -vocab_dict_path data/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone transformer \
-                -embedding_dim 360 \
+                -embedding_dim 380 \
                 -ffn_num_hiddens 300 \
                 -num_heads 4 \
                 -num_layers 2 \
                 -dropout 0.5 \
                 -criterion BCE \
                 -lr 0.0002 \
-                -epochs 25 \
+                -epochs 30 \
                 -steps_per_epoch 40 \
                 -batch_size 128 \
                 -train_ratio 0.8

@@ -34,7 +34,6 @@ class Tester(object):
             state_dict_path (str): 模型参数路径
         """
         self.model.load_state_dict(torch.load(state_dict_path))
-        self.model.eval()
         
         test_loss = 0.0
         tbar = tqdm(self.test_loader, desc='\r')

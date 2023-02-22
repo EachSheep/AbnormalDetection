@@ -11,6 +11,10 @@ parser.add_argument("-random_seed", type=int, default=42,
                     help="the random seed number")
 parser.add_argument('-experiment_dir', type=str, default='./experiment',
                     help="experiment dir root")  # 存放当前实验的参数、模型、日志等
+parser.add_argument('-log_dir', type=str, default='log_dir',
+                    help="name of log_dir")  # 存放当前实验保存的参数,在experiment_dir下
+parser.add_argument('-log_label', type=int, default=1,
+                    help="name of log_label")  # 存放当前实验保存的参数,在experiment_dir下,和log_dir组成log_dir-log_label，用于区分不同的实验
 parser.add_argument('-weight_name', type=str,
                     default='model-{}.pkl', help="the name of the model weight")
 
