@@ -125,7 +125,7 @@ if __name__ == "__main__":
     with open(os.path.join(output_dir, "lowercase2uppercase.json"), "w") as f:
         json.dump(lowercase2uppercase, f, indent=4)
 
-    # file_path = "../data/page2nums/page2num-1.json"
+    # file_path = "../experiment/page2nums/page2num-1.json"
     # json_data = json.load(open(file_path, "r"))
     # json_data = prepreprocess_from_page2num(json_data)
-    # json.dump(json_data, open("../data/page2nums/page2num.json", "w"), indent=4)
+    # json.dump(json_data, open("../experiment/page2nums/page2num.json", "w"), indent=4)

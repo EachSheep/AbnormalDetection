@@ -14,12 +14,12 @@ Or follow instructions in requirements.txt to install.
 
 ```bash
 # 第一次运行时生成cache文件，注意！！！更改max_seq_len之后需要去掉--cache重新运行一遍
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
                 -max_seq_len 200 \
-                -vocab_dict_path data/assets/page2idx.json \
+                -vocab_dict_path experiment/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone lstma \
                 -embedding_dim 280 \
@@ -32,13 +32,13 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
                 -train_ratio 0.8
 
 # 之后的运行可以指定cache参数。
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
                 --use_cache \
                 -max_seq_len 200 \
-                -vocab_dict_path data/assets/page2idx.json \
+                -vocab_dict_path experiment/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone lstma \
                 -embedding_dim 280 \
@@ -64,12 +64,12 @@ transformer为backbone。
 
 ```bash
 # 第一次运行时生成cache文件，注意！！！更改max_seq_len之后需要去掉--cache重新运行一遍
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
                 -max_seq_len 200 \
-                -vocab_dict_path data/assets/page2idx.json \
+                -vocab_dict_path experiment/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone transformer \
                 -embedding_dim 280 \
@@ -85,13 +85,13 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
                 -train_ratio 0.8
 
 # 之后的运行可以指定cache参数。
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
                 --use_cache \
                 -max_seq_len 200 \
-                -vocab_dict_path data/assets/page2idx.json \
+                -vocab_dict_path experiment/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone transformer \
                 -embedding_dim 280 \
@@ -113,24 +113,24 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
 
 第一次运行不加上--use_cache选项以生成cache，之后加上--use_cache选项。
 ```bash
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
                 --use_cache \
                 -data_type pageuser \
                 -max_seq_len 300 \
-                -vocab_dict_path data/assets/page2idx.json \
+                -vocab_dict_path experiment/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone transformer \
-                -embedding_dim 380 \
-                -ffn_num_hiddens 300 \
+                -embedding_dim 360 \
+                -ffn_num_hiddens 1440 \
                 -num_heads 4 \
                 -num_layers 2 \
                 -dropout 0.5 \
                 -criterion BCE \
                 -lr 0.0002 \
-                -epochs 30 \
+                -epochs 20 \
                 -steps_per_epoch 40 \
                 -batch_size 128 \
                 -train_ratio 0.8
@@ -138,41 +138,21 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
 
 调参
 ```
-python tmp_train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
-                -weight_name model.pkl \
-                -file_name_abnormal feedback.csv \
-                -file_name_normal normal.csv \
-                --use_cache \
-                -data_type pageuser \
-                -max_seq_len 300 \
-                -vocab_dict_path data/assets/page2idx.json \
-                -vocab_size 10000 \
-                -backbone transformer \
-                -embedding_dim 380 \
-                -ffn_num_hiddens 300 \
-                -num_heads 4 \
-                -num_layers 2 \
-                -dropout 0.5 \
-                -criterion BCE \
-                -lr 0.0002 \
-                -epochs 30 \
-                -steps_per_epoch 40 \
-                -batch_size 128 \
-                -train_ratio 0.8
+
 ```
 
 ### 按照单词建立词典，而后建立向量
 
 第一次运行不加上--use_cache选项以生成cache，之后加上--use_cache选项。
 ```bash
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
+python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
                 --use_cache \
                 -data_type worduser \
                 -max_seq_len 400 \
-                -vocab_dict_path data/assets/word2idx.json \
+                -vocab_dict_path experiment/assets/word2idx.json \
                 -vocab_size 10000 \
                 -backbone transformer \
                 -embedding_dim 512 \
@@ -193,13 +173,13 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
 
 注意！！！用什么样子的参数训练，就要用什么样子的参数测试。
 ```bash
-python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
+python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
                 --use_cache \
                 -max_seq_len 300 \
-                -vocab_dict_path data/assets/page2idx.json \
+                -vocab_dict_path experiment/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone transformer \
                 -embedding_dim 380 \

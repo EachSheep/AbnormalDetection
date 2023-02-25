@@ -7,14 +7,14 @@ for embedding_dim in 320 360 400 ; do
                     for lr in 0.0002 ; do
                         for steps_per_epoch in 40 80 120 ; do
                             for batch_size in 64 128 256 512 ; do
-                                python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/data/preprocess/ \
+                                python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
                                             -weight_name model.pkl \
                                             -file_name_abnormal feedback.csv \
                                             -file_name_normal normal.csv \
                                             --use_cache \
                                             -data_type pageuser \
                                             -max_seq_len 300 \
-                                            -vocab_dict_path data/assets/page2idx.json \
+                                            -vocab_dict_path experiment/assets/page2idx.json \
                                             -vocab_size 10000 \
                                             -backbone transformer \
                                             -embedding_dim $embedding_dim \

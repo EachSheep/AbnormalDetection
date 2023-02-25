@@ -208,6 +208,8 @@ def build_train_dataloader(args, **kwargs):
     """
     train_data, train_len, train_sid, train_uid, train_label, valid_data, valid_len, valid_sid, valid_uid, valid_label = prepare_train_data(
         args, **kwargs)
+    # print("train_data:", train_data[0, :])
+    # input()
     train_set = MyDataset(args, train_data, train_label,
                           **{"valid_lens": train_len, "sid": train_sid, "uid": train_uid})
     valid_set = MyDataset(args, valid_data, valid_label, **

@@ -7,15 +7,15 @@
 python prepreprocess.py -in_dir_prepre xxx \
                         -feedback_names_prepre feedback.csv  \
                         -normal_names_prepre normal.csv  \
-                        -output_dir_prepre ../data/prepreprocess/
+                        -output_dir_prepre ../experiment/prepreprocess/
 ```
 
 模拟时候：
 ```bash
-python prepreprocess.py -in_dir_prepre ../data/datasets/ \
+python prepreprocess.py -in_dir_prepre ../experiment/datasets/ \
                         -feedback_names_prepre feedback.csv  \
                         -normal_names_prepre normal.csv  \
-                        -output_dir_prepre ../data/prepreprocess/
+                        -output_dir_prepre ../experiment/prepreprocess/
 ```
 
 
@@ -29,19 +29,19 @@ python prepreprocess.py -in_dir_prepre ../data/datasets/ \
 
 真实跑的时候：
 ```bash
-python g_page2num.py -in_dir_gen ../data/prepreprocess/ \
+python g_page2num.py -in_dir_gen ../experiment/prepreprocess/ \
                      -feedback_names_gen feedback.csv  \
                      -normal_names_gen normal.csv  \
-                     -output_dir_gen ../data/page2nums/ \
+                     -output_dir_gen ../experiment/page2nums/ \
                      -page2num_names_gen page2num-1.json
 ```
 
 模拟时候：
 ```bash
-python g_page2num.py -in_dir_gen ../data/prepreprocess/ \
+python g_page2num.py -in_dir_gen ../experiment/prepreprocess/ \
                      -feedback_names_gen feedback.csv  \
                      -normal_names_gen normal.csv  \
-                     -output_dir_gen ../data/page2nums/ \
+                     -output_dir_gen ../experiment/page2nums/ \
                      -page2num_names_gen page2num-simulate.json
 ```
 
@@ -53,13 +53,13 @@ python g_page2num.py -in_dir_gen ../data/prepreprocess/ \
 
 真实跑的时候：
 ```bash
-python g_lastword_dict.py -page2num_dir ../data/page2nums/ \
+python g_lastword_dict.py -page2num_dir ../experiment/page2nums/ \
                         -page2num_names page2num-1.json
 ```
 
 模拟时候：根据 page2num-1.json和page2num-simulate.json生成lastword_dict.json，
 ```bash
-python g_lastword_dict.py -page2num_dir ../data/page2nums/ \
+python g_lastword_dict.py -page2num_dir ../experiment/page2nums/ \
                         -page2num_names page2num-1.json \
                         --simulate
 ```
@@ -68,16 +68,16 @@ python g_lastword_dict.py -page2num_dir ../data/page2nums/ \
 
 真实跑的时候：
 ```bash
-python g_word_dict.py -page2num_dir ../data/page2nums/ \
+python g_word_dict.py -page2num_dir ../experiment/page2nums/ \
                         -page2num_names page2num-1.json
 ```
 
 模拟时候：根据 page2num-1.json和page2num-simulate.json生成word_dict.json，
 ```bash
-python g_word_dict.py -page2num_dir ../data/page2nums/ \
+python g_word_dict.py -page2num_dir ../experiment/page2nums/ \
                       -page2num_names page2num-1.json \
                       --simulate \
-                      -output_dir_word_dict ../data/assets/
+                      -output_dir_word_dict ../experiment/assets/
 ```
 
 ## run g_page_code.py
@@ -88,16 +88,16 @@ python g_word_dict.py -page2num_dir ../data/page2nums/ \
 
 真实跑的时候：
 ```bash
-python g_page_code.py -lastword_dict_dir ../data/page2nums/ \
+python g_page_code.py -lastword_dict_dir ../experiment/page2nums/ \
                 -lastword_dict_name lastword_dict.json \
-                -output_dir_lastword_dict ../data/assets/
+                -output_dir_lastword_dict ../experiment/assets/
 ```
 
 模拟时候：
 ```bash
-python g_page_code.py -lastword_dict_dir ../data/page2nums/ \
+python g_page_code.py -lastword_dict_dir ../experiment/page2nums/ \
                 -lastword_dict_name lastword_dict.json \
-                -output_dir_lastword_dict ../data/assets/ \
+                -output_dir_lastword_dict ../experiment/assets/ \
                 --simulate
 ```
 
@@ -108,10 +108,10 @@ python g_page_code.py -lastword_dict_dir ../data/page2nums/ \
 ## run preprocess.py
 
 ```bash
-python preprocess.py -in_dir_pre ../data/prepreprocess/ \
+python preprocess.py -in_dir_pre ../experiment/prepreprocess/ \
                      -feedback_names_pre feedback.csv  \
                      -normal_names_pre normal.csv  \
-                     -output_dir_pre ../data/preprocess/
+                     -output_dir_pre ../experiment/preprocess/
 ```
 
 # 其它
@@ -119,7 +119,7 @@ python preprocess.py -in_dir_pre ../data/prepreprocess/ \
 ## run draw.py：绘图
 
 ```bash
-python draw.py -in_dir ../data/prepreprocess \
+python draw.py -in_dir ../experiment/prepreprocess \
                -feedback_names feedback.csv  \
                -normal_names normal.csv
 ```
@@ -131,13 +131,13 @@ python draw.py -in_dir ../data/prepreprocess \
 python g_lowercase2uppercase.py -in_dir_prepre xxx \
                         -feedback_names_prepre feedback.csv  \
                         -normal_names_prepre normal.csv  \
-                        -output_dir_prepre ../data/assets/
+                        -output_dir_prepre ../experiment/assets/
 ```
 
 模拟时候：
 ```bash
-python g_lowercase2uppercase.py -in_dir_prepre ../data/datasets/ \
+python g_lowercase2uppercase.py -in_dir_prepre ../experiment/datasets/ \
                         -feedback_names_prepre feedback.csv  \
                         -normal_names_prepre normal.csv  \
-                        -output_dir_prepre ../data/assets/
+                        -output_dir_prepre ../experiment/assets/
 ```

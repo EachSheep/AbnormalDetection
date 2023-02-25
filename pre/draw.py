@@ -227,7 +227,7 @@ if __name__ == "__main__":
     # in_dir, normal_name, feedback_name = pre_args.in_dir, pre_args.normal_names[0], pre_args.feedback_names[0]
     # draw_user_sessionnum(in_dir, normal_name, feedback_name)
 
-    # data_path = "../data/page2nums/page2num-1.json"
+    # data_path = "../experiment/page2nums/page2num-1.json"
     # draw_pagenum_distribution(data_path)
     pass
     

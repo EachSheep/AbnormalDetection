@@ -48,6 +48,8 @@ class Trainer(object):
         tbar = tqdm(self.train_loader)
         for i, sample in enumerate(tbar):
             batch_data, label, valid_lens = sample['data'], sample['label'], sample['valid_lens']
+            # print("batch_data:", batch_data.shape, batch_data[0])
+            # input()
             if self.args.cuda:
                 batch_data, label, valid_lens = batch_data.cuda(), label.cuda(), valid_lens.cuda()
 

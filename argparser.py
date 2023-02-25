@@ -17,6 +17,8 @@ parser.add_argument('-log_label', type=int, default=1,
                     help="name of log_label")  # 存放当前实验保存的参数,在experiment_dir下,和log_dir组成log_dir-log_label，用于区分不同的实验
 parser.add_argument('-weight_name', type=str,
                     default='model-{}.pkl', help="the name of the model weight")
+parser.add_argument('-cache_dir', type=str,
+                    default='', help="the abs path of the cache dir")
 
 # 训练设置
 parser.add_argument('-workers', type=int, default=4,
@@ -26,14 +28,14 @@ parser.add_argument('--no_cuda', action='store_true',
 
 # 数据集设置
 parser.add_argument('-dataset_root', type=str,
-                    default='./data/preprocess/', help="dataset root")  # 数据集存放的根目录
+                    default='./experiment/preprocess/', help="dataset root")  # 数据集存放的根目录
 parser.add_argument('-file_name_abnormal', type=str, default='feedback.csv',
                     help="anomaly file name")  # 异常数据文件名，也就是feedback用户的行为轨迹
 parser.add_argument('-file_name_normal', type=str, default='normal.csv',
                     help="normal file name")  # 正常数据文件名，也就是normal用户的行为轨迹
 parser.add_argument('--use_cache', action='store_true', default=False,
                     help="user cache or not")  # 是否使用之前使用数据集直接生成的矩阵
-parser.add_argument('-vocab_dict_path', type=str, default='data/assets/page2idx.json',
+parser.add_argument('-vocab_dict_path', type=str, default='experiment/assets/page2idx.json',
                     help="vocab dict path")  # 页面->id的字典存放路径
 parser.add_argument('-data_type', type=str, default='pagesession',
                     help="pagesession, pageuser, worduser")  # 按照session切分还是按照user切分
