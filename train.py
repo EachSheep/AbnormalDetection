@@ -16,7 +16,10 @@ from utils.set_logger import set_logger
 if __name__ == '__main__':
 
     torch.manual_seed(args.random_seed)
-    runs_dir = os.path.join(args.experiment_dir, 'runs')
+    if args.cache_dir == '':
+        runs_dir = os.path.join(args.experiment_dir, 'runs')
+    else:
+        runs_dir = os.path.join(args.cache_dir, 'runs')
     if not os.path.exists(runs_dir):
         os.makedirs(runs_dir)
     summarywriter_dir = os.path.join(runs_dir, 'train')
@@ -54,24 +57,32 @@ if __name__ == '__main__':
     
     # writer.flush()
     # writer.close()
-    model_path = os.path.join(args.experiment_dir, 'models', args.weight_name)
+    if args.cache_dir == '':
+        model_path = os.path.join(args.experiment_dir, 'models', args.weight_name)
+    else:
+        model_path = os.path.join(args.cache_dir, 'models', args.weight_name)
     trainer.save_weights(model_path = model_path)
     end_time = time.time()
+    print("Training time: {:.3f}".format((end_time - begin_time))) # 113.505 / 856408 = 0.00013
     args.train_time_per_epoch = "{:.3f}".format((end_time - begin_time) / args.epochs)
-    cur_roc, cur_pr, precision, recall, F1, cur_test_loss, cur_label, cur_predict, total_uid = trainer.test()
-    np.save(os.path.join(summarywriter_dir, 'valid_label.npy'), cur_label)
-    np.save(os.path.join(summarywriter_dir, 'valid_predict.npy'), cur_predict)
-    np.save(os.path.join(summarywriter_dir, 'valid_uid.npy'), total_uid)
-    logger.info("ROC-AUC: %.4f, PR-AUC: %.4f, PRECISION: %.4f, RECALL: %.4f, F1: %.4f, VALID LOSS: %.4f" % (cur_roc, cur_pr, precision, recall, F1, cur_test_loss))
-    preserve_dir = os.path.join(args.experiment_dir, f'{args.log_dir}-{args.log_label}')
+    # cur_roc, cur_pr, precision, recall, F1, cur_test_loss, cur_label, cur_predict, total_uid = trainer.test()
+    # np.save(os.path.join(summarywriter_dir, 'valid_label.npy'), cur_label)
+    # np.save(os.path.join(summarywriter_dir, 'valid_predict.npy'), cur_predict)
+    # np.save(os.path.join(summarywriter_dir, 'valid_uid.npy'), total_uid)
+    # logger.info("ROC-AUC: %.4f, PR-AUC: %.4f, PRECISION: %.4f, RECALL: %.4f, F1: %.4f, VALID LOSS: %.4f" % (cur_roc, cur_pr, precision, recall, F1, cur_test_loss))
+    
+    # args.ROCAUC = cur_roc
+    # args.PRAUC = cur_pr
+    # args.PRECISION = precision
+    # args.RECALL = recall
+    # args.F1 = F1
+    # args.VALID_LOSS = cur_test_loss
+    if args.cache_dir == '':
+        preserve_dir = os.path.join(args.experiment_dir, f'{args.log_dir}-{args.log_label}')
+    else:
+        preserve_dir = os.path.join(args.cache_dir, f'{args.log_dir}-{args.log_label}')
     if not os.path.exists(preserve_dir):
         os.makedirs(preserve_dir)
-    args.ROCAUC = cur_roc
-    args.PRAUC = cur_pr
-    args.PRECISION = precision
-    args.RECALL = recall
-    args.F1 = F1
-    args.VALID_LOSS = cur_test_loss
     setting_path = os.path.join(preserve_dir, 'train_setting.json')
     json.dump(args.__dict__, open(setting_path, 'w'), indent=4)
 
@@ -93,3 +104,28 @@ if __name__ == '__main__':
     # args.VALID_LOSS = cur_test_loss
     # setting_path = os.path.join(preserve_dir, 'train_setting.json')
     # json.dump(args.__dict__, open(setting_path, 'w'), indent=4)
+
+    # 大概15个epoch收敛
+    # 训练全部的大概: 
+    # 测试:444.0410s,(1165655 + 30855)
+
+    # devnet 5个epoch收敛: 总共耗时:10851.901(12个epoch),因此耗时:10851.901/12*5 = 4521.625
+
+    # 新数据集的结果
+    
+    # BCE, 随机采样
+    
+    
+    # BCE, 平衡采样
+
+    # WeightedBCE, 随机采样
+    # after_newtest_data :  87.91 38.64
+    # after_newtest_data :  87.91 66.00
+    # after_newtest_data :  87.91 56.90
+    # after_newtest_data :  87.91 52.50
+
+    # WeightedBCE, 平衡采样
+    
+    # 对比学习+WeightedBCE, 平衡采样
+    
+    # 对比学习, 平衡采样

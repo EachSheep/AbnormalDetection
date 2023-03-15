@@ -73,6 +73,11 @@ parser.add_argument('-dropout', type=float, default=0.5, help="the dropout")
 # 损失函数和优化器设置
 parser.add_argument('-criterion', type=str,
                     default='deviation', help="the loss function")
+parser.add_argument('-weight', nargs='+', type=float, default=[0.9, 0.1]) # 对正样本和负样本loss的权重
+# 训练时，数据的采样方法
+parser.add_argument('-sampler', type=str,
+                    default='random', choices=['randomed', 'balanced', 'balanced_step'], help="the sampler")
+
 parser.add_argument('-optimizer', type=str,
                     default='Adam', help="the optimizer")
 parser.add_argument('-lr', type=float, default=0.0002, help="lr")
@@ -96,3 +101,6 @@ args.cuda = not args.no_cuda and torch.cuda.is_available()
 cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
 args.weight_name = args.weight_name.format(cur_time)
 args.cur_time = cur_time
+
+if args.cache_dir == '':
+    args.cache_dir = args.experiment_dir

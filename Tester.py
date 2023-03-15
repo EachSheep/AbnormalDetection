@@ -6,7 +6,7 @@ from sklearn.metrics import average_precision_score, roc_auc_score, recall_score
 from sklearn.metrics import precision_recall_curve, roc_curve
 import matplotlib.pyplot as plt
 
-from dataloaders.dataloader import build_valid_dataloader,  build_test_dataloader
+from dataloaders.dataloader import build_valid_dataloader,  build_test_dataloader, build_train_dataloader
 from model.net import Net
 from model.criterion import build_criterion
 
@@ -15,8 +15,10 @@ class Tester(object):
     def __init__(self, args):
         self.args = args
         kargs = {'num_workers': args.workers}
-
-        if args.test_set == "valid":
+        
+        if args.test_set == "train":
+            self.test_loader = build_train_dataloader(args, **kargs)
+        elif args.test_set == "valid":
             self.test_loader = build_valid_dataloader(args, **kargs)
         else:
             self.test_loader = build_test_dataloader(args, **kargs)
@@ -78,6 +80,16 @@ class Tester(object):
         except:
             roc_auc = 0
             pr_auc = 0
+
+        normal_sample = np.sum(total_target == 0)
+        abnormal_sample = np.sum(total_target == 1)
+        print("normal data vs. abnormal data: ", normal_sample, abnormal_sample, "ratio: ", abnormal_sample / (normal_sample + abnormal_sample))
+        # 20: normal data vs. abnormal data:  403142 6428 ratio:  0.015694508875161755
+        # 50: normal data vs. abnormal data:  440255 10030 ratio: 0.022274781527254962
+        # 100: normal data vs. abnormal data:  200878 7284 ratio: 0.03499197740221558   76.3900 = 0.00036697379925250526
+        # 200: normal data vs. abnormal data:  89278 4790 ratio:  0.05092061062210316   34.7053 = 0.00036893842752051706
+        # 300: normal data vs. abnormal data:  32102 2323 ratio:  0.0674800290486565    13.0781 = 0.0003799012345679012
+        # all: normal data vs. abnormal data:  1165655 30855 ratio:  0.02578749864188348 444.1302 = 0.0003711880385454363
 
         # precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
         # fig = plt.figure()

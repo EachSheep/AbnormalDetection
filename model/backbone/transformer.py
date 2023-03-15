@@ -254,6 +254,30 @@ class Transformer(TransformerEncoder):
         X = X.mean(dim=1)
         return X
 
+class ContrastiveTransformer(TransformerEncoder):
+    def __init__(self, vocab_size, embedding_dim,
+                 ffn_num_hiddens,
+                 num_heads, num_layers, dropout,
+                 output_dim, use_bias=False, **kwargs):
+        super(ContrastiveTransformer, self).__init__(
+            vocab_size, embedding_dim,
+            ffn_num_hiddens,
+            num_heads, num_layers, dropout, use_bias,
+            **kwargs)
+        self.encoder = TransformerEncoder(
+            vocab_size, embedding_dim,
+            ffn_num_hiddens,
+            num_heads, num_layers, dropout, use_bias, **kwargs)
+        self.fc = nn.Linear(embedding_dim, output_dim)
+
+        self.fc_seq = nn.Linear(300, 128)
+
+    def forward(self, X, valid_lens, *args):
+        X = self.encoder(X, valid_lens, *args)
+        X = self.fc(X)
+        score = X.mean(dim=1)
+        X = self.fc_seq(X) # projector layer
+        return X, score
 
 class DecoderBlock(nn.Module):
     """解码器中第i个块"""

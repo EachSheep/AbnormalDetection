@@ -4,16 +4,17 @@ import os
 import pandas as pd
 import torch
 import json
+import numpy as np
 from torch.utils.data import DataLoader
 
 from dataloaders.MyDataset import MyDataset
-from dataloaders.utlis import worker_init_fn_seed, BalancedBatchSampler, RandomedBatchSampler
+from dataloaders.utlis import worker_init_fn_seed, BalancedBatchSampler, BalancedBatchSamplerWithStep, RandomedBatchSamplerWithStep
 import dataloaders.data2matrix_by_pagesession as d2mbps
 import dataloaders.data2matrix_by_pageuser as d2mbpu
 import dataloaders.data2matrix_by_worduser as d2mbwu
 
 
-def prepare_train_data(args, **kwargs):
+def prepare_train_valid_data(args, **kwargs):
     """载入数据，划分训练集和测试集，划分的依据是args.train_ratio
 
     Args:
@@ -33,31 +34,31 @@ def prepare_train_data(args, **kwargs):
     """
     if args.use_cache:
         train_data = torch.load(os.path.join(
-            args.experiment_dir, 'cache', f'train_data.pkl'))
+            args.cache_dir, 'cache', f'train_data.pkl'))
         train_len = torch.load(os.path.join(
-            args.experiment_dir, 'cache', f'train_len.pkl'))
-        train_sid = pd.read_csv(os.path.join(
-            args.experiment_dir, 'cache', f'train_sid.csv'))
+            args.cache_dir, 'cache', f'train_len.pkl'))
+        # train_sid = pd.read_csv(os.path.join(
+            # args.cache_dir, 'cache', f'train_sid.csv'))
         train_uid = pd.read_csv(os.path.join(
-            args.experiment_dir, 'cache', f'train_uid.csv'))
+            args.cache_dir, 'cache', f'train_uid.csv'))
         train_label = torch.load(os.path.join(
-            args.experiment_dir, 'cache', f'train_label.pkl'))
+            args.cache_dir, 'cache', f'train_label.pkl'))
 
         valid_data = torch.load(os.path.join(
-            args.experiment_dir, 'cache', f'valid_data.pkl'))
+            args.cache_dir, 'cache', f'valid_data.pkl'))
         valid_len = torch.load(os.path.join(
-            args.experiment_dir, 'cache', f'valid_len.pkl'))
-        valid_sid = pd.read_csv(os.path.join(
-            args.experiment_dir, 'cache', f'valid_sid.csv'))
+            args.cache_dir, 'cache', f'valid_len.pkl'))
+        # valid_sid = pd.read_csv(os.path.join(
+            # args.cache_dir, 'cache', f'valid_sid.csv'))
         valid_uid = pd.read_csv(os.path.join(
-            args.experiment_dir, 'cache', f'valid_uid.csv'))
+            args.cache_dir, 'cache', f'valid_uid.csv'))
         valid_label = torch.load(os.path.join(
-            args.experiment_dir, 'cache', f'valid_label.pkl'))
+            args.cache_dir, 'cache', f'valid_label.pkl'))
         
-        train_sid = train_sid['session_id'].values
+        # train_sid = train_sid['session_id'].values
         train_uid = train_uid['user_id'].values
 
-        valid_sid = valid_sid['session_id'].values
+        # valid_sid = valid_sid['session_id'].values
         valid_uid = valid_uid['user_id'].values
         
     else:
@@ -86,15 +87,15 @@ def prepare_train_data(args, **kwargs):
             raise ValueError(
                 'args.data_type must be pagesession or pageuser or worduser')
 
-        if not os.path.exists(os.path.join(args.experiment_dir, 'cache')):
-            os.makedirs(os.path.join(args.experiment_dir, 'cache'))
-        json.dump(unknown_page_name_normal, open(os.path.join(args.experiment_dir,
+        if not os.path.exists(os.path.join(args.cache_dir, 'cache')):
+            os.makedirs(os.path.join(args.cache_dir, 'cache'))
+        json.dump(unknown_page_name_normal, open(os.path.join(args.cache_dir,
                   'cache', f'unknown_page_name_normal-train.json'), 'w'), indent=4)
-        json.dump(unknown_page_len_normal, open(os.path.join(args.experiment_dir,
+        json.dump(unknown_page_len_normal, open(os.path.join(args.cache_dir,
                   'cache', f'unknown_page_len_normal-train.json'), 'w'), indent=4)
-        json.dump(unknown_page_name_abnormal, open(os.path.join(args.experiment_dir,
+        json.dump(unknown_page_name_abnormal, open(os.path.join(args.cache_dir,
                                                                 'cache', f'unknown_page_name_abnormal-train.json'), 'w'), indent=4)
-        json.dump(unknown_page_len_abnormal, open(os.path.join(args.experiment_dir,
+        json.dump(unknown_page_len_abnormal, open(os.path.join(args.cache_dir,
                                                                'cache', f'unknown_page_len_abnormal-train.json'), 'w'), indent=4)
 
         # 按照真实数据集的比例混合正常和异常数据，真实数据集的比例即 异常用户数 / 正常用户数
@@ -163,40 +164,41 @@ def prepare_train_data(args, **kwargs):
         valid_sid = valid_sid.reset_index(drop=True)
         valid_uid = valid_uid.reset_index(drop=True)
 
-        if not os.path.exists(os.path.join(args.experiment_dir, 'cache')):
-            os.makedirs(os.path.join(args.experiment_dir, 'cache'))
+        if not os.path.exists(os.path.join(args.cache_dir, 'cache')):
+            os.makedirs(os.path.join(args.cache_dir, 'cache'))
         torch.save(train_data, os.path.join(
-            args.experiment_dir, 'cache', f'train_data.pkl'))
+            args.cache_dir, 'cache', f'train_data.pkl'))
         torch.save(train_len, os.path.join(
-            args.experiment_dir, 'cache', f'train_len.pkl'))
-        train_sid.to_csv(os.path.join(
-            args.experiment_dir, 'cache', f'train_sid.csv'), index=False)
+            args.cache_dir, 'cache', f'train_len.pkl'))
+        # train_sid.to_csv(os.path.join(
+            # args.cache_dir, 'cache', f'train_sid.csv'), index=False)
         train_uid.to_csv(os.path.join(
-            args.experiment_dir, 'cache', f'train_uid.csv'), index=False)
+            args.cache_dir, 'cache', f'train_uid.csv'), index=False)
         torch.save(train_label, os.path.join(
-            args.experiment_dir, 'cache', f'train_label.pkl'))
+            args.cache_dir, 'cache', f'train_label.pkl'))
 
         torch.save(valid_data, os.path.join(
-            args.experiment_dir, 'cache', f'valid_data.pkl'))
+            args.cache_dir, 'cache', f'valid_data.pkl'))
         torch.save(valid_len, os.path.join(
-            args.experiment_dir, 'cache', f'valid_len.pkl'))
-        valid_sid.to_csv(os.path.join(
-            args.experiment_dir, 'cache', f'valid_sid.csv'), index=False)
+            args.cache_dir, 'cache', f'valid_len.pkl'))
+        # valid_sid.to_csv(os.path.join(
+            # args.cache_dir, 'cache', f'valid_sid.csv'), index=False)
         valid_uid.to_csv(os.path.join(
-            args.experiment_dir, 'cache', f'valid_uid.csv'), index=False)
+            args.cache_dir, 'cache', f'valid_uid.csv'), index=False)
         torch.save(valid_label, os.path.join(
-            args.experiment_dir, 'cache', f'valid_label.pkl'))
+            args.cache_dir, 'cache', f'valid_label.pkl'))
 
-        train_sid = train_sid['session_id'].values
+        # train_sid = train_sid['session_id'].values
         train_uid = train_uid['user_id'].values
 
-        valid_sid = valid_sid['session_id'].values
+        # valid_sid = valid_sid['session_id'].values
         valid_uid = valid_uid['user_id'].values
 
-    return train_data, train_len, train_sid, train_uid, train_label, valid_data, valid_len, valid_sid, valid_uid, valid_label
+    return train_data, train_len, train_uid, train_label, valid_data, valid_len, valid_uid, valid_label
+    # return train_data, train_len, train_sid, train_uid, train_label, valid_data, valid_len, valid_sid, valid_uid, valid_label
 
 
-def build_train_dataloader(args, **kwargs):
+def build_train_valid_dataloader(args, **kwargs):
     """构建dataloader
 
     Args:
@@ -206,34 +208,131 @@ def build_train_dataloader(args, **kwargs):
         train_loader (torch.utils.data.DataLoader): 训练集的dataloader
         valid_loader (torch.utils.data.DataLoader): 测试集的dataloader
     """
-    train_data, train_len, train_sid, train_uid, train_label, valid_data, valid_len, valid_sid, valid_uid, valid_label = prepare_train_data(
+    train_data, train_len, train_uid, train_label, valid_data, valid_len, valid_uid, valid_label = prepare_train_valid_data(
+    # train_data, train_len, train_sid, train_uid, train_label, valid_data, valid_len, valid_sid, valid_uid, valid_label = prepare_train_valid_data(
         args, **kwargs)
-    # print("train_data:", train_data[0, :])
-    # input()
     train_set = MyDataset(args, train_data, train_label,
-                          **{"valid_lens": train_len, "sid": train_sid, "uid": train_uid})
+                          **{"valid_lens": train_len, "uid": train_uid})
+                        #   **{"valid_lens": train_len, "sid": train_sid, "uid": train_uid})
     valid_set = MyDataset(args, valid_data, valid_label, **
-                          {"valid_lens": valid_len, "sid": valid_sid, "uid": valid_uid})
+                          {"valid_lens": valid_len, "uid": valid_uid})
+                        #   {"valid_lens": valid_len, "sid": valid_sid, "uid": valid_uid})
     args.train_normal_num = train_set.normal_num()
     args.train_abnormal_num = train_set.abnormal_num()
     args.valid_normal_num = valid_set.normal_num()
     args.valid_abnormal_num = valid_set.abnormal_num()
 
-    train_loader = DataLoader(
-        train_set,
-        worker_init_fn=worker_init_fn_seed,
-        batch_sampler=BalancedBatchSampler(args, train_set),
-        **kwargs
-    )
+    print("train len: ", len(train_set))
+
+    if args.sampler == 'randomed':
+        train_loader = DataLoader(
+            train_set,
+            worker_init_fn=worker_init_fn_seed,
+            batch_size=args.batch_size,
+            shuffle=True,
+            **kwargs
+        )
+    elif args.sampler == 'balanced':
+        train_loader = DataLoader(
+            train_set,
+            worker_init_fn=worker_init_fn_seed,
+            batch_sampler=BalancedBatchSampler(args, train_set),
+            **kwargs
+        )
+    elif args.sampler == 'balanced_step':
+        train_loader = DataLoader(
+            train_set,
+            worker_init_fn=worker_init_fn_seed,
+            batch_sampler=BalancedBatchSamplerWithStep(args, train_set),
+            **kwargs
+        )
     valid_loader = DataLoader(
         valid_set,
         worker_init_fn=worker_init_fn_seed,
-        batch_sampler=RandomedBatchSampler(args, valid_set),
+        batch_sampler=RandomedBatchSamplerWithStep(args, valid_set),
         **kwargs
     )
     return train_loader, valid_loader
 
+def prepare_train_data(args, **kwargs):
+    """载入训练集的数据，训练集的数据应该在prepare_train_data中已经保存到cache中
+
+    Args:
+        args (argparse.ArgumentParser()): 参数
+        kwargs (dict): 参数
+    Returns:
+        train_data (torch.LongTensor): 测试集的session向量
+        train_len (torch.LongTensor): 测试集的session向量长度
+        train_sid (pd.DataFrame): 测试集的session_id
+        train_uid (pd.DataFrame): 测试集的user_id
+        train_label (torch.LongTensor): 测试集的session向量标签
+    """
+    train_data = torch.load(os.path.join(
+        args.cache_dir, 'cache', f'train_data.pkl'))
+    train_len = torch.load(os.path.join(
+        args.cache_dir, 'cache', f'train_len.pkl'))
+    # train_sid = pd.read_csv(os.path.join(
+        # args.cache_dir, 'cache', f'train_sid.csv'))
+    train_uid = pd.read_csv(os.path.join(
+        args.cache_dir, 'cache', f'train_uid.csv'))
+    train_label = torch.load(os.path.join(
+        args.cache_dir, 'cache', f'train_label.pkl'))
+    # train_sid = train_sid['session_id'].values
+    train_uid = train_uid['user_id'].values
     
+    valid_data = torch.load(os.path.join(
+        args.cache_dir, 'cache', f'valid_data.pkl'))
+    valid_len = torch.load(os.path.join(
+        args.cache_dir, 'cache', f'valid_len.pkl'))
+    # valid_sid = pd.read_csv(os.path.join(
+        # args.cache_dir, 'cache', f'valid_sid.csv'))
+    valid_uid = pd.read_csv(os.path.join(
+        args.cache_dir, 'cache', f'valid_uid.csv'))
+    valid_label = torch.load(os.path.join(
+        args.cache_dir, 'cache', f'valid_label.pkl'))
+    # valid_sid = valid_sid['session_id'].values
+    valid_uid = valid_uid['user_id'].values
+
+    # concat torch
+    train_data = torch.cat((train_data, valid_data), 0)
+    del valid_data
+    train_len = torch.cat((train_len, valid_len), 0)
+    del valid_len
+    train_label = torch.cat((train_label, valid_label), 0)
+    del valid_label
+    train_uid = np.concatenate((train_uid, valid_uid), 0)
+    del valid_uid
+    # train_sid = np.concatenate((train_sid, valid_sid), 0)
+    # del valid_sid
+
+    return train_data, train_len, train_uid, train_label
+    # return train_data, train_len, train_sid, train_uid, train_label
+
+def build_train_dataloader(args, **kwargs):
+    """构建dataloader
+
+    Args:
+        args (argparse.ArgumentParser()): 参数
+        kwargs (dict): 参数
+    Returns:
+        valid_loader (torch.utils.data.DataLoader): 测试集的dataloader
+    """
+    train_data, train_len, train_uid, train_label = prepare_train_data(
+    # train_data, train_len, train_sid, train_uid, train_label = prepare_train_data(
+        args, **kwargs)
+    train_set = MyDataset(args, train_data, train_label, **
+                         {"valid_lens": train_len, "uid": train_uid})
+                        #  {"valid_lens": train_len, "sid": train_sid, "uid": train_uid})
+    args.train_normal_num = train_set.normal_num()
+    args.train_abnormal_num = train_set.abnormal_num()
+    train_loader = DataLoader(
+        train_set,
+        batch_size=args.batch_size,
+        shuffle=False,
+        worker_init_fn=worker_init_fn_seed,
+        **kwargs
+    )
+    return train_loader
 
 def prepare_valid_data(args, **kwargs):
     """载入验证集的数据，验证集的数据应该在prepare_train_data中已经保存到cache中
@@ -249,20 +348,21 @@ def prepare_valid_data(args, **kwargs):
         valid_label (torch.LongTensor): 测试集的session向量标签
     """
     valid_data = torch.load(os.path.join(
-        args.experiment_dir, 'cache', f'valid_data.pkl'))
+        args.cache_dir, 'cache', f'valid_data.pkl'))
     valid_len = torch.load(os.path.join(
-        args.experiment_dir, 'cache', f'valid_len.pkl'))
-    valid_sid = pd.read_csv(os.path.join(
-        args.experiment_dir, 'cache', f'valid_sid.csv'))
+        args.cache_dir, 'cache', f'valid_len.pkl'))
+    # valid_sid = pd.read_csv(os.path.join(
+        # args.cache_dir, 'cache', f'valid_sid.csv'))
     valid_uid = pd.read_csv(os.path.join(
-        args.experiment_dir, 'cache', f'valid_uid.csv'))
+        args.cache_dir, 'cache', f'valid_uid.csv'))
     valid_label = torch.load(os.path.join(
-        args.experiment_dir, 'cache', f'valid_label.pkl'))
+        args.cache_dir, 'cache', f'valid_label.pkl'))
     
-    valid_sid = valid_sid['session_id'].values
+    # valid_sid = valid_sid['session_id'].values
     valid_uid = valid_uid['user_id'].values
 
-    return valid_data, valid_len, valid_sid, valid_uid, valid_label
+    return valid_data, valid_len, valid_uid, valid_label
+    # return valid_data, valid_len, valid_sid, valid_uid, valid_label
 
 def build_valid_dataloader(args, **kwargs):
     """构建dataloader
@@ -273,10 +373,12 @@ def build_valid_dataloader(args, **kwargs):
     Returns:
         valid_loader (torch.utils.data.DataLoader): 测试集的dataloader
     """
-    valid_data, valid_len, valid_sid, valid_uid, valid_label = prepare_valid_data(
+    valid_data, valid_len, valid_uid, valid_label = prepare_valid_data(
+    # valid_data, valid_len, valid_sid, valid_uid, valid_label = prepare_valid_data(
         args, **kwargs)
     valid_set = MyDataset(args, valid_data, valid_label, **
-                         {"valid_lens": valid_len, "sid": valid_sid, "uid": valid_uid})
+                         {"valid_lens": valid_len, "uid": valid_uid})
+                        #  {"valid_lens": valid_len, "sid": valid_sid, "uid": valid_uid})
     args.valid_normal_num = valid_set.normal_num()
     args.valid_abnormal_num = valid_set.abnormal_num()
     valid_loader = DataLoader(
@@ -303,15 +405,15 @@ def prepare_test_data(args, **kwargs):
     """
     if args.use_cache:
         test_data = torch.load(os.path.join(
-            args.experiment_dir, 'cache', f'test_data.pkl'))
+            args.cache_dir, 'cache', f'test_data.pkl'))
         test_len = torch.load(os.path.join(
-            args.experiment_dir, 'cache', f'test_len.pkl'))
-        test_sid = pd.read_csv(os.path.join(
-            args.experiment_dir, 'cache', f'test_sid.csv'))
+            args.cache_dir, 'cache', f'test_len.pkl'))
+        # test_sid = pd.read_csv(os.path.join(
+            # args.cache_dir, 'cache', f'test_sid.csv'))
         test_uid = pd.read_csv(os.path.join(
-            args.experiment_dir, 'cache', f'test_uid.csv'))
+            args.cache_dir, 'cache', f'test_uid.csv'))
         test_label = torch.load(os.path.join(
-            args.experiment_dir, 'cache', f'test_label.pkl'))
+            args.cache_dir, 'cache', f'test_label.pkl'))
     else:
         if args.data_type == "pagesession":
             data_normal, len_normal, sid_normal, uid_normal, label_normal, unknown_page_name_normal, unknown_page_len_normal = d2mbps.prepare_normal_data(
@@ -332,15 +434,15 @@ def prepare_test_data(args, **kwargs):
             raise ValueError(
                 "args.data_type must be pagesession or pageuser or worduser")
 
-        if not os.path.exists(os.path.join(args.experiment_dir, 'cache')):
-            os.makedirs(os.path.join(args.experiment_dir, 'cache'))
-        json.dump(unknown_page_name_normal, open(os.path.join(args.experiment_dir,
+        if not os.path.exists(os.path.join(args.cache_dir, 'cache')):
+            os.makedirs(os.path.join(args.cache_dir, 'cache'))
+        json.dump(unknown_page_name_normal, open(os.path.join(args.cache_dir,
                                                               'cache', f'unknown_page_name_normal-test.json'), 'w'), indent=4)
-        json.dump(unknown_page_len_normal, open(os.path.join(args.experiment_dir,
+        json.dump(unknown_page_len_normal, open(os.path.join(args.cache_dir,
                                                              'cache', f'unknown_page_len_normal-test.json'), 'w'), indent=4)
-        json.dump(unknown_page_name_abnormal, open(os.path.join(args.experiment_dir,
+        json.dump(unknown_page_name_abnormal, open(os.path.join(args.cache_dir,
                                                                 'cache', f'unknown_page_name_abnormal-test.json'), 'w'), indent=4)
-        json.dump(unknown_page_len_abnormal, open(os.path.join(args.experiment_dir,
+        json.dump(unknown_page_len_abnormal, open(os.path.join(args.cache_dir,
                                                                'cache', f'unknown_page_len_abnormal-test.json'), 'w'), indent=4)
 
         # 合并训练数据
@@ -353,20 +455,21 @@ def prepare_test_data(args, **kwargs):
         test_uid = test_uid.reset_index(drop=True)
 
         torch.save(test_data, os.path.join(
-            args.experiment_dir, 'cache', f'test_data.pkl'))
+            args.cache_dir, 'cache', f'test_data.pkl'))
         torch.save(test_len, os.path.join(
-            args.experiment_dir, 'cache', f'test_len.pkl'))
-        test_sid.to_csv(os.path.join(
-            args.experiment_dir, 'cache', f'test_sid.csv'), index=False)
+            args.cache_dir, 'cache', f'test_len.pkl'))
+        # test_sid.to_csv(os.path.join(
+            # args.cache_dir, 'cache', f'test_sid.csv'), index=False)
         test_uid.to_csv(os.path.join(
-            args.experiment_dir, 'cache', f'test_uid.csv'), index=False)
+            args.cache_dir, 'cache', f'test_uid.csv'), index=False)
         torch.save(test_label, os.path.join(
-            args.experiment_dir, 'cache', f'test_label.pkl'))
+            args.cache_dir, 'cache', f'test_label.pkl'))
 
-        test_sid = test_sid['session_id'].values
+        # test_sid = test_sid['session_id'].values
         test_uid = test_uid['user_id'].values
 
-    return test_data, test_len, test_sid, test_uid, test_label
+    return test_data, test_len, test_uid, test_label
+    # return test_data, test_len, test_sid, test_uid, test_label
 
 
 def build_test_dataloader(args, **kwargs):
@@ -378,10 +481,12 @@ def build_test_dataloader(args, **kwargs):
     Returns:
         test_loader (torch.utils.data.DataLoader): 测试集的dataloader
     """
-    test_data, test_len, test_sid, test_uid, test_label = prepare_test_data(
+    test_data, test_len, test_uid, test_label = prepare_test_data(
+    # test_data, test_len, test_sid, test_uid, test_label = prepare_test_data(
         args, **kwargs)
     test_set = MyDataset(args, test_data, test_label, **
-                         {"valid_lens": test_len, "sid": test_sid, "uid": test_uid})
+                         {"valid_lens": test_len, "uid": test_uid})
+                        #  {"valid_lens": test_len, "sid": test_sid, "uid": test_uid})
     args.test_normal_num = test_set.normal_num()
     args.test_abnormal_num = test_set.abnormal_num()
     test_loader = DataLoader(

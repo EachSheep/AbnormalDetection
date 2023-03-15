@@ -24,7 +24,7 @@ class MyDataset(Dataset):
 
         self.valid_lens = self.kwargs['valid_lens']
         self.uid = self.kwargs['uid']
-        self.sid = self.kwargs['sid']
+        # self.sid = self.kwargs['sid']
 
     def __len__(self):
         return len(self.data)

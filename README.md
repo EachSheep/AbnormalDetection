@@ -25,6 +25,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
                 -embedding_dim 280 \
                 -hidden_dim 200 \
                 -criterion BCE \
+                -weight 0.9 0.1 \
                 -lr 0.0002 \
                 -epochs 30 \
                 -steps_per_epoch 40 \
@@ -44,6 +45,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
                 -embedding_dim 280 \
                 -hidden_dim 200 \
                 -criterion BCE \
+                -weight 0.9 0.1 \
                 -lr 0.0002 \
                 -epochs 30 \
                 -steps_per_epoch 40 \
@@ -78,6 +80,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
                 -num_layers 2 \
                 -dropout 0.5 \
                 -criterion BCE \
+                -weight 0.9 0.1 \
                 -lr 0.0002 \
                 -epochs 30 \
                 -steps_per_epoch 40 \
@@ -100,6 +103,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
                 -num_layers 2 \
                 -dropout 0.5 \
                 -criterion BCE \
+                -weight 0.9 0.1 \
                 -lr 0.0002 \
                 -epochs 30 \
                 -steps_per_epoch 40 \
@@ -114,6 +118,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
 第一次运行不加上--use_cache选项以生成cache，之后加上--use_cache选项。
 ```bash
 python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
+                -cache_dir /home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/AirExperimentOutput.1/after_newtrain_data \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
@@ -128,17 +133,44 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
                 -num_heads 4 \
                 -num_layers 2 \
                 -dropout 0.5 \
-                -criterion BCE \
+                -criterion WeightedBCE \
+                -weight 0.1 0.9 \
+                -sampler randomed \
                 -lr 0.0002 \
-                -epochs 20 \
+                -epochs 3 \
                 -steps_per_epoch 40 \
                 -batch_size 128 \
                 -train_ratio 0.8
 ```
+criterion：Contrastive, WeightedBCE, BCE, deviation, focal
+sampler: randomed, balanced, balanced_step
 
-调参
+测试
 ```
-
+python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
+                -cache_dir /home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/AirExperimentOutput.1/after_newtest_data \
+                -weight_name model.pkl \
+                -file_name_abnormal feedback.csv \
+                -file_name_normal normal.csv \
+                --use_cache \
+                -test_set train \
+                -data_type pageuser \
+                -max_seq_len 300 \
+                -vocab_dict_path experiment/assets/page2idx.json \
+                -vocab_size 10000 \
+                -backbone transformer \
+                -embedding_dim 360 \
+                -ffn_num_hiddens 1440 \
+                -num_heads 4 \
+                -num_layers 2 \
+                -dropout 0.5 \
+                -criterion WeightedBCE \
+                -weight 0.1 0.9 \
+                -lr 0.0002 \
+                -epochs 3 \
+                -steps_per_epoch 40 \
+                -batch_size 128 \
+                -train_ratio 0.8
 ```
 
 ### 按照单词建立词典，而后建立向量
@@ -161,6 +193,7 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
                 -num_layers 2 \
                 -dropout 0.5 \
                 -criterion BCE \
+                -weight 0.9 0.1 \
                 -lr 0.0002 \
                 -epochs 30 \
                 -steps_per_epoch 40 \
@@ -188,6 +221,7 @@ python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection
                 -num_layers 2 \
                 -dropout 0.5 \
                 -criterion BCE \
+                -weight 0.9 0.1 \
                 -lr 0.0002 \
                 -epochs 30 \
                 -steps_per_epoch 40 \

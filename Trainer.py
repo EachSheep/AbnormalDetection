@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 import time
 
-from dataloaders.dataloader import build_train_dataloader, build_valid_dataloader
+from dataloaders.dataloader import build_train_valid_dataloader, build_valid_dataloader
 from model.net import Net
 from model.criterion import build_criterion
 
@@ -17,7 +17,7 @@ class Trainer(object):
     def __init__(self, args):
         self.args = args
         kargs = {'num_workers': args.workers}
-        self.train_loader, self.valid_loader = build_train_dataloader(args, **kargs)
+        self.train_loader, self.valid_loader = build_train_valid_dataloader(args, **kargs)
         self.test_loader = build_valid_dataloader(args, **kargs)
         self.train_num = len(self.train_loader.dataset)
 
@@ -48,13 +48,14 @@ class Trainer(object):
         tbar = tqdm(self.train_loader)
         for i, sample in enumerate(tbar):
             batch_data, label, valid_lens = sample['data'], sample['label'], sample['valid_lens']
-            # print("batch_data:", batch_data.shape, batch_data[0])
-            # input()
             if self.args.cuda:
                 batch_data, label, valid_lens = batch_data.cuda(), label.cuda(), valid_lens.cuda()
-
-            output = self.model(batch_data, valid_lens)
-            loss = self.criterion(output, label.unsqueeze(1).float())
+            if self.args.criterion != "Contrastive":
+                output = self.model(batch_data, valid_lens)
+                loss = self.criterion(output, label.unsqueeze(1).float())
+            else:
+                X, output = self.model(batch_data, valid_lens)
+                loss = self.criterion(X, output, label.unsqueeze(1).float())
             self.optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
@@ -95,7 +96,7 @@ class Trainer(object):
             loss = self.criterion(output, label.unsqueeze(1).float())
 
             test_loss += loss.item()
-            tbar.set_description('Test loss: %.3f' % (test_loss / (i + 1)))
+            tbar.set_description('Train loss: %.3f' % (test_loss / (i + 1)))
             
             total_pred = np.append(total_pred, output.data.cpu().numpy())
             total_target = np.append(total_target, label.cpu().numpy())
