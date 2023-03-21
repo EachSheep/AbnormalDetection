@@ -78,8 +78,12 @@ class SupConLoss(nn.Module):
         anchor_dot_contrast = torch.div(
             torch.matmul(anchor_feature, contrast_feature.T),
             self.temperature)
+        # print(anchor_dot_contrast.shape)
+        # print(anchor_dot_contrast)
         # for numerical stability
         logits_max, _ = torch.max(anchor_dot_contrast, dim=1, keepdim=True)
+        # print(logits_max.shape)
+        # print(logits_max)
         logits = anchor_dot_contrast - logits_max.detach()
 
         # tile mask
@@ -96,14 +100,15 @@ class SupConLoss(nn.Module):
         # compute log_prob
         exp_logits = torch.exp(logits) * logits_mask
         log_prob = logits - torch.log(exp_logits.sum(1, keepdim=True))
-
+        
         # compute mean of log-likelihood over positive
         mean_log_prob_pos = (mask * log_prob).sum(1) / mask.sum(1)
 
         # loss
         loss = - (self.temperature / self.base_temperature) * mean_log_prob_pos
         loss = loss.view(anchor_count, batch_size).mean()
-
+        # print("loss:", loss.shape, loss.max(), loss.min())
+        
         return loss
 
 
@@ -117,8 +122,11 @@ class ContrastiveWithLogitsLoss(nn.Module):
     def forward(self, X, input, target):
         # X: [n, c]
         X = X.view(X.shape[0], 1, -1)
-        return self.weighted_BCE_with_logits_loss(input, target) + \
-            self.sup_con_loss(self, X, labels=target)
+        bce_loss = self.weighted_BCE_with_logits_loss(input, target)
+        con_loss = self.sup_con_loss(X, labels=target)
+        # print("BCE Loss : ", bce_loss.item())
+        # print("Contrastive Loss : ", con_loss.item())
+        return bce_loss, con_loss
             
 
 def build_criterion(args):

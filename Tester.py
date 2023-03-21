@@ -51,12 +51,19 @@ class Tester(object):
                 batch_data, label, valid_lens = batch_data.cuda(), label.cuda(), valid_lens.cuda()
 
             with torch.no_grad():
-                output = self.model(batch_data, valid_lens)
-            loss = self.criterion(output, label.unsqueeze(1).float())
+                if self.args.criterion != "Contrastive":
+                    output = self.model(batch_data, valid_lens)
+                    loss = self.criterion(output, label.unsqueeze(1).float())
+                else:
+                    X, output = self.model(batch_data, valid_lens)
+                    bce_loss, con_loss = self.criterion(X, output, label.unsqueeze(1).float())
+                    loss = bce_loss + con_loss
 
             test_loss += loss.item()
-            tbar.set_description('Test loss: %.3f' % (test_loss / (i + 1)))
-            
+            if self.args.criterion != "Contrastive":
+                tbar.set_description('Test loss: %.3f' % (test_loss / (i + 1)))
+            else:
+                tbar.set_description('Test loss: %.3f, %.3f, %.3f' % (loss, bce_loss, con_loss))
             total_pred = np.append(total_pred, output.data.cpu().numpy())
             total_target = np.append(total_target, label.cpu().numpy())
             total_uid = np.append(total_uid, uid)

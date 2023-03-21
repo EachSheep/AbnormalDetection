@@ -50,19 +50,24 @@ class Trainer(object):
             batch_data, label, valid_lens = sample['data'], sample['label'], sample['valid_lens']
             if self.args.cuda:
                 batch_data, label, valid_lens = batch_data.cuda(), label.cuda(), valid_lens.cuda()
+            
             if self.args.criterion != "Contrastive":
                 output = self.model(batch_data, valid_lens)
                 loss = self.criterion(output, label.unsqueeze(1).float())
             else:
                 X, output = self.model(batch_data, valid_lens)
-                loss = self.criterion(X, output, label.unsqueeze(1).float())
+                bce_loss, con_loss = self.criterion(X, output, label.unsqueeze(1).float())
+                loss = bce_loss + con_loss
             self.optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.optimizer.step()
 
             train_loss += loss.item()
-            tbar.set_description('Epoch:%d, Train loss: %.3f' % (epoch, train_loss / (i + 1)))
+            if self.args.criterion != "Contrastive":
+                tbar.set_description('Epoch:%d, Train loss: %.3f' % (epoch, train_loss / (i + 1)))
+            else:
+                tbar.set_description('Epoch:%d, Train loss: %.3f, bce_loss: %.3f, con_loss: %.3f' % (epoch, train_loss / (i + 1), bce_loss, con_loss))
         self.scheduler.step()
 
         cur_epoch_loss = train_loss / (i + 1)

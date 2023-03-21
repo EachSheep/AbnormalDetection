@@ -270,13 +270,13 @@ class ContrastiveTransformer(TransformerEncoder):
             num_heads, num_layers, dropout, use_bias, **kwargs)
         self.fc = nn.Linear(embedding_dim, output_dim)
 
-        self.fc_seq = nn.Linear(300, 128)
+        self.fc_seq = nn.Linear(300, 64)
 
     def forward(self, X, valid_lens, *args):
         X = self.encoder(X, valid_lens, *args)
         X = self.fc(X)
         score = X.mean(dim=1)
-        X = self.fc_seq(X) # projector layer
+        X = self.fc_seq(X.squeeze(2)) # projector layer
         return X, score
 
 class DecoderBlock(nn.Module):

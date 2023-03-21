@@ -60,11 +60,9 @@ class Net(nn.Module):
 
         if self.args.criterion != "Contrastive":
             score = self.feature_extractor(batch_data, valid_lens) # (batch_size, 1)
-            print("score:", score.shape)
+            # print("score:", score.shape)
             return score.view(-1, 1)
         
         else:
             X, score = self.feature_extractor(batch_data, valid_lens)
-            print("X:", X.shape, "score:", score.shape)
-            input()
             return X, score.view(-1, 1)

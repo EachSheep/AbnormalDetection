@@ -114,18 +114,75 @@ if __name__ == '__main__':
     # 新数据集的结果
     
     # BCE, 随机采样
+    # after_newtest_data :  88.53 39.23
+    # after_newtest_data :  88.53 59.40
+    # after_newtest_data :  88.53 55.48
+    # after_newtest_data :  88.53 52.78
     
-    
-    # BCE, 平衡采样
+    # # BCE, 平衡采样
+    # after_newtest_data :  89.01 39.33
+    # after_newtest_data :  89.01 56.20
+    # after_newtest_data :  89.01 54.10
+    # after_newtest_data :  89.01 51.94
 
     # WeightedBCE, 随机采样
-    # after_newtest_data :  87.91 38.64
-    # after_newtest_data :  87.91 66.00
-    # after_newtest_data :  87.91 56.90
-    # after_newtest_data :  87.91 52.50
+    # # 1781.497 2 epochs
+    # 0.1, 0.9的权重
+    # after_newtest_data :  87.50 37.97
+    # after_newtest_data :  87.50 61.10
+    # after_newtest_data :  87.50 56.84
+    # after_newtest_data :  87.50 51.63
+
+    # WeightedBCE, 随机采样
+    # # 1781.497 2 epochs
+    # 0.01, 0.99的权重
+    # after_newtest_data :  87.40 37.17
+    # after_newtest_data :  87.40 66.40
+    # after_newtest_data :  87.40 56.62
+    # after_newtest_data :  87.40 51.78
+    
 
     # WeightedBCE, 平衡采样
-    
+    # # 1780.615 2 epochs
+    # 0.1, 0.9的权重
+    # after_newtest_data :  88.81 39.51
+    # after_newtest_data :  88.81 63.30
+    # after_newtest_data :  88.81 58.00
+    # after_newtest_data :  88.81 53.35
+
+    # # 0.01, 0.99的权重
+    # after_newtest_data :  88.62 39.25
+    # after_newtest_data :  88.62 74.70
+    # after_newtest_data :  88.62 58.10
+    # after_newtest_data :  88.62 53.20
+
+    # 0.001, 0.999的权重
+    # after_newtest_data :  88.29 39.08
+    # after_newtest_data :  88.29 74.00
+    # after_newtest_data :  88.29 59.24
+    # after_newtest_data :  88.29 53.58
+
+    # # # 0.01, 0.99的权重，部分训练
+    # after_newtest_data :  87.16 36.56
+    # after_newtest_data :  87.16 58.10
+    # after_newtest_data :  87.16 54.62
+    # after_newtest_data :  87.16 51.68
+
     # 对比学习+WeightedBCE, 平衡采样
+    # 896.305, 1 epoch
+    # after_newtest_data :  88.53 39.03
+    # after_newtest_data :  88.53 53.60
+    # after_newtest_data :  88.53 52.18
+    # after_newtest_data :  88.53 51.15
+
+    # DevNet, 平衡采样
+    # after_newtest_data :  85.73 32.06
+    # after_newtest_data :  85.73 41.00
+    # after_newtest_data :  85.73 46.28
+    # after_newtest_data :  85.73 47.92
     
-    # 对比学习, 平衡采样
+    # # DevNet, 随机采样
+    # after_newtest_data :  62.28 6.04
+    # after_newtest_data :  62.28 10.40
+    # after_newtest_data :  62.28 6.78
+    # after_newtest_data :  62.28 6.33

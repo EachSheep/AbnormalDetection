@@ -14,45 +14,56 @@ Or follow instructions in requirements.txt to install.
 
 ```bash
 # 第一次运行时生成cache文件，注意！！！更改max_seq_len之后需要去掉--cache重新运行一遍
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
-                -weight_name model.pkl \
-                -file_name_abnormal feedback.csv \
-                -file_name_normal normal.csv \
-                -max_seq_len 200 \
-                -vocab_dict_path experiment/assets/page2idx.json \
-                -vocab_size 10000 \
-                -backbone lstma \
-                -embedding_dim 280 \
-                -hidden_dim 200 \
-                -criterion BCE \
-                -weight 0.9 0.1 \
-                -lr 0.0002 \
-                -epochs 30 \
-                -steps_per_epoch 40 \
-                -batch_size 128 \
-                -train_ratio 0.8
 
 # 之后的运行可以指定cache参数。
 python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
+                -cache_dir /home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/AirExperimentOutput.1/after_newtrain_data \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
                 --use_cache \
-                -max_seq_len 200 \
+                -data_type pageuser \
+                -max_seq_len 300 \
                 -vocab_dict_path experiment/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone lstma \
                 -embedding_dim 280 \
                 -hidden_dim 200 \
-                -criterion BCE \
-                -weight 0.9 0.1 \
+                -criterion WeightedBCE \
+                -weight 0.01 0.99 \
+                -sampler balanced \
+                -dropout 0.5 \
                 -lr 0.0002 \
-                -epochs 30 \
+                -epochs 3 \
                 -steps_per_epoch 40 \
                 -batch_size 128 \
                 -train_ratio 0.8
 
 # 可以使用的loss有BCE, focal, deviation，但是感觉BCE就够了
+
+python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
+                -cache_dir /home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/AirExperimentOutput.1/after_newtest_data \
+                -weight_name model.pkl \
+                -file_name_abnormal feedback.csv \
+                -file_name_normal normal.csv \
+                --use_cache \
+                -test_set train \
+                -data_type pageuser \
+                -max_seq_len 300 \
+                -vocab_dict_path experiment/assets/page2idx.json \
+                -vocab_size 10000 \
+                -backbone lstma \
+                -embedding_dim 280 \
+                -hidden_dim 200 \
+                -criterion WeightedBCE \
+                -weight 0.01 0.99 \
+                -sampler balanced \
+                -dropout 0.5 \
+                -lr 0.0002 \
+                -epochs 3 \
+                -steps_per_epoch 40 \
+                -batch_size 128 \
+                -train_ratio 0.8
 ```
 
 ### transformer based 
@@ -134,10 +145,10 @@ python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetectio
                 -num_layers 2 \
                 -dropout 0.5 \
                 -criterion WeightedBCE \
-                -weight 0.1 0.9 \
-                -sampler randomed \
+                -weight 0.01 0.99 \
+                -sampler balanced \
                 -lr 0.0002 \
-                -epochs 3 \
+                -epochs 2 \
                 -steps_per_epoch 40 \
                 -batch_size 128 \
                 -train_ratio 0.8
@@ -146,7 +157,7 @@ criterion：Contrastive, WeightedBCE, BCE, deviation, focal
 sampler: randomed, balanced, balanced_step
 
 测试
-```
+```bash
 python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
                 -cache_dir /home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/AirExperimentOutput.1/after_newtest_data \
                 -weight_name model.pkl \
@@ -165,9 +176,10 @@ python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection
                 -num_layers 2 \
                 -dropout 0.5 \
                 -criterion WeightedBCE \
-                -weight 0.1 0.9 \
+                -weight 0.01 0.99 \
+                -sampler balanced \
                 -lr 0.0002 \
-                -epochs 3 \
+                -epochs 2 \
                 -steps_per_epoch 40 \
                 -batch_size 128 \
                 -train_ratio 0.8
