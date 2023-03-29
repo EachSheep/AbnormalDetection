@@ -8,11 +8,11 @@ from matplotlib.gridspec import GridSpec
 #          'axes.titlesize':'x-large',
 #          'xtick.labelsize':'x-large',
 #          'ytick.labelsize':'x-large'}
-params = {'legend.fontsize': '32',
-         'axes.labelsize': '32',
-         'axes.titlesize':'32',
-         'xtick.labelsize':'32',
-         'ytick.labelsize':'32'}
+params = {'legend.fontsize': '20',
+         'axes.labelsize': '20',
+         'axes.titlesize':'20',
+         'xtick.labelsize':'20',
+         'ytick.labelsize':'20'}
 plt.rcParams.update(params)
 
 def draw_train_test_time():
@@ -23,7 +23,7 @@ def draw_train_test_time():
     ax11 = ax[0]
 
     # 绘制柱状图
-    x = ['DeepLog', 'LogAnomaly', 'PLELog', 'LogRobust', 'DeepSAD', 'DevNet', 'CatBoost', 'XGBoost', 'Approach$_{all}$', 'Approach$_{par}$']
+    x = ['DeepLog', 'LogAnomaly', 'PLELog', 'LogRobust', 'DeepSAD', 'DevNet', 'CatBoost', 'XGBoost', 'ADPal$_{all}$', 'ADPal$_{par}$']
     y_train = [88, 614, 70, 31, 15, 15, 1.97, 1.75, 15, 1.4]
     c_train = [
         '#2e7ba6', '#c88fbd', '#2d9679', '#c99436', '#ffd2a4', 
@@ -46,7 +46,7 @@ def draw_train_test_time():
 
 
     ax12 = ax[1]
-    x = ['DeepLog', 'LogAnomaly', 'PLELog', 'LogRobust', 'DeepSAD', 'DevNet', 'CatBoost', 'XGBoost', 'Approach$_{all}$', 'Approach$_{par}$']
+    x = ['DeepLog', 'LogAnomaly', 'PLELog', 'LogRobust', 'DeepSAD', 'DevNet', 'CatBoost', 'XGBoost', 'ADPal$_{all}$', 'ADPal$_{par}$']
     y_test = [0.018, 18.20, 1.16, 0.52, 0.046, 0.37, 0.25, 0.0029, 0.37, 0.37]
     c_test = [
         '#2e7ba6', '#c88fbd', '#2d9679', '#c99436', '#ffd2a4', 
@@ -70,11 +70,11 @@ def draw_train_test_time():
 
     # plt.subplots_adjust(left=0.1, bottom=0.01)
 
-    # 图例: ['DeepLog', 'LogAnomaly', 'PLELog', 'LogRobust', 'DeepSAD', 'DevNet', 'CatBoost', 'XGBoost', 'Approach$_{all}$', 'Approach$_{par}$']
+    # 图例: ['DeepLog', 'LogAnomaly', 'PLELog', 'LogRobust', 'DeepSAD', 'DevNet', 'CatBoost', 'XGBoost', 'ADPal$_{all}$', 'ADPal$_{par}$']
 
     # 统一设置图例
     fig.legend((plot11[0], plot11[1], plot11[2], plot11[3], plot11[4], plot11[5], plot11[6], plot11[7], plot11[8], plot11[9]),
-                ('DeepLog', 'LogAnomaly', 'PLELog', 'LogRobust', 'DeepSAD', 'DevNet', 'CatBoost', 'XGBoost', 'Approach$_{all}$', 'Approach$_{par}$'),
+                ('DeepLog', 'LogAnomaly', 'PLELog', 'LogRobust', 'DeepSAD', 'DevNet', 'CatBoost', 'XGBoost', 'ADPal$_{all}$', 'ADPal$_{par}$'),
                 loc='upper center', ncol=5, fancybox=True, shadow=True, fontsize=17)
     plt.savefig(
         "./train_test_time.png", bbox_inches='tight')
@@ -148,10 +148,10 @@ def draw_radar1():
     plot8 = ax11.plot(angles, XGBoost, 'o-', linewidth=2,label='XGBoost')
     # ax11.fill(angles, XGBoost, alpha=0.25)
 
-    plot9 = ax11.plot(angles, Approachall, 'o-', linewidth=2,label='Approach$_{all}$')
+    plot9 = ax11.plot(angles, Approachall, 'o-', linewidth=2,label='ADPal$_{all}$')
     # ax11.fill(angles, Approachall, alpha=0.25)
 
-    plot10 = ax11.plot(angles, Approachpar, 'o-', linewidth=2,label='Approach$_{par}$')
+    plot10 = ax11.plot(angles, Approachpar, 'o-', linewidth=2,label='ADPal$_{par}$')
     # ax11.fill(angles, Approachpar, alpha=0.25)
 
     ax11.set_thetagrids(
@@ -162,7 +162,7 @@ def draw_radar1():
 
     # 设置图例的位置
     ax11.legend((plot1[0], plot2[0], plot3[0], plot4[0], plot5[0], plot6[0], plot7[0], plot8[0], plot9[0], plot10[0]),
-                ('DeepLog', 'LogAnomaly', 'PLELog', 'LogRobust', 'DeepSAD', 'DevNet', 'CatBoost', 'XGBoost', 'Approach$_{all}$', 'Approach$_{par}$'),
+                ('DeepLog', 'LogAnomaly', 'PLELog', 'LogRobust', 'DeepSAD', 'DevNet', 'CatBoost', 'XGBoost', 'ADPal$_{all}$', 'ADPal$_{par}$'),
                 loc='lower right', ncol=1, fancybox=True, shadow=True, prop = {'size':8})
     
     plt.savefig(
@@ -190,19 +190,19 @@ def draw_radar2():
     angles=np.linspace(0, 2*np.pi,len(Approachall)-1, endpoint=False)
     angles = np.concatenate((angles,[angles[0]]))
 
-    plot1 = ax11.plot(angles, Approachlst, 'o-', linewidth=2,label='Approach$_lst$')
+    plot1 = ax11.plot(angles, Approachlst, 'o-', linewidth=2,label='ADPal$_lst$')
     # ax11.fill(angles, Approachlst, alpha=0.25)
     # 添加每个数据点的标签
     for angle, value in zip(angles, Approachlst):
         ax11.text(angle, value, '%.2f' % value, color=cs[0], fontsize=10)
 
-    plot2 = ax11.plot(angles, Approachbce, 'o-', linewidth=2,label='Approach$_bce$')
+    plot2 = ax11.plot(angles, Approachbce, 'o-', linewidth=2,label='ADPal$_bce$')
     # ax11.fill(angles, Approachbce, alpha=0.25)
     # 添加每个数据点的标签
     for angle, value in zip(angles, Approachbce):
         ax11.text(angle, value, '%.2f' % value, color=cs[1], fontsize=10)
 
-    plot3 = ax11.plot(angles, Approachall, 'o-', linewidth=2,label='Approach$_all$')
+    plot3 = ax11.plot(angles, Approachall, 'o-', linewidth=2,label='ADPal$_all$')
     # ax11.fill(angles, Approachall, alpha=0.25)
     # 添加每个数据点的标签
     for angle, value in zip(angles, Approachall):
@@ -216,7 +216,7 @@ def draw_radar2():
 
     # 设置图例的位置
     ax11.legend((plot1[0], plot2[0], plot3[0]),
-                ('Approach$_{lst}$', 'Approach$_{bce}$', 'Approach$_{all}$'),
+                ('ADPal$_{lst}$', 'ADPal$_{bce}$', 'ADPal$_{all}$'),
                 loc='lower right', ncol=1, fancybox=True, shadow=True,
                 # prop = {'size':8}
                 )
