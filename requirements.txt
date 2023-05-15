@@ -1,0 +1,11 @@
+# 首先创建虚拟环境 `conda create -n ICWS2023`
+# 确认安装好cuda>=12.1之后，安装cuda12.1版本的pytorch，`conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch-nightly -c nvidia`
+# 然后使用pip install -r requirements.txt安装以下的包
+graphviz==0.20.1
+matplotlib==3.7.1
+nltk==3.7
+numpy==1.24.3
+pandas==1.5.3
+scikit_learn==1.2.2
+tqdm==4.65.0
+tensorboard==2.12.1
