@@ -29,7 +29,6 @@ if __name__ == '__main__':
         model_path = os.path.join(args.cache_dir, 'models', args.weight_name)
 
     begin_time = time.time()
-    # cur_roc, cur_pr, cur_test_loss, cur_label, cur_predict, total_uid = tester.eval(
     cur_roc, cur_pr, precision, recall, F1, cur_test_loss, cur_label, cur_predict, total_uid = tester.eval(
         state_dict_path=model_path)
     end_time = time.time()

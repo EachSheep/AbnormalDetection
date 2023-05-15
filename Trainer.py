@@ -2,15 +2,13 @@ import os
 import numpy as np
 import torch
 from tqdm import tqdm
-import time
 
 from dataloaders.dataloader import build_train_valid_dataloader, build_valid_dataloader
 from model.net import Net
 from model.criterion import build_criterion
 
-from sklearn.metrics import average_precision_score, roc_auc_score, recall_score, precision_score
-from sklearn.metrics import precision_recall_curve, roc_curve
-import matplotlib.pyplot as plt
+from sklearn.metrics import average_precision_score, roc_auc_score
+from sklearn.metrics import precision_recall_curve
 
 class Trainer(object):
 
@@ -21,7 +19,7 @@ class Trainer(object):
         self.test_loader = build_valid_dataloader(args, **kargs)
         self.train_num = len(self.train_loader.dataset)
 
-        self.model = Net(args) # 定义网络
+        self.model = Net(args)
         self.criterion = build_criterion(args)
         if args.optimizer == "Adam":
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -127,19 +125,6 @@ class Trainer(object):
             roc_auc = 0
             pr_auc = 0
 
-        # rscore = recall_score(total_target , total_pred)
-        # pscore = precision_score(total_target, total_pred)
-
-        # precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
-        # fig = plt.figure()
-        # ax = fig.add_subplot(111)
-        # ax.plot(recall, precision)
-        # ax.set_xlabel('Recall')
-        # ax.set_ylabel('Precision')
-        # ax.set_title('PR Curve')
-        # figures_dir = os.path.join(self.args.experiment_dir, "figures")
-        # plt.savefig(os.path.join(figures_dir, f'pr_curve-valid-{epoch}-{self.args.cur_time}.png'), bbox_inches='tight')
-
         return roc_auc, pr_auc, best_precision, best_recall, best_F1, cur_epoch_loss, total_target, total_pred, total_uid
     
     def test(self):
@@ -191,16 +176,6 @@ class Trainer(object):
         except:
             roc_auc = 0
             pr_auc = 0
-
-        # precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
-        # fig = plt.figure()
-        # ax = fig.add_subplot(111)
-        # ax.plot(recall, precision)
-        # ax.set_xlabel('Recall')
-        # ax.set_ylabel('Precision')
-        # ax.set_title('PR Curve')
-        # figures_dir = os.path.join(self.args.experiment_dir, "figures")
-        # plt.savefig(os.path.join(figures_dir, f'pr_curve-test.png'), bbox_inches='tight')
 
         return roc_auc, pr_auc, best_precision, best_recall, best_F1,  test_loss / epoch_num, total_target, total_pred, total_uid
     

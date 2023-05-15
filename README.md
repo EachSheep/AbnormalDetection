@@ -1,173 +1,37 @@
-# Abnormal Detection
+# 项目简介
 
-## Setup 
+本项目分为两个部分，第一部分是数据需求和预处理，第二部分是模型部分。
 
-Install with `pip install -r requirements.txt`.
+## 数据需求和预处理
 
-Or follow instructions in requirements.txt to install.
+详见pre/README.md文件。这里面详细描述了数据格式，处理要求，脚本调用方法。
 
-## Train
+## 模型部分
 
-### lstm based 
+### Setup 
 
-训练的时候，主要可调的参数有**max_seq_len, embedding_dim, hidden_dim, steps_per_epoch, batch_size**
+First, create a virtual environment: 
+`conda create -n ICWS2023`
 
-```bash
-# 第一次运行时生成cache文件，注意！！！更改max_seq_len之后需要去掉--cache重新运行一遍
+Once you have confirmed that cuda >= 12.1 is installed, install the cuda 12.1 version of PyTorch using the command: 
+`conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch-nightly -c nvidia`
 
-# 之后的运行可以指定cache参数。
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
-                -cache_dir /home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/AirExperimentOutput.1/after_newtrain_data \
-                -weight_name model.pkl \
-                -file_name_abnormal feedback.csv \
-                -file_name_normal normal.csv \
-                --use_cache \
-                -data_type pageuser \
-                -max_seq_len 300 \
-                -vocab_dict_path experiment/assets/page2idx.json \
-                -vocab_size 10000 \
-                -backbone lstma \
-                -embedding_dim 280 \
-                -hidden_dim 200 \
-                -criterion WeightedBCE \
-                -weight 0.01 0.99 \
-                -sampler balanced \
-                -dropout 0.5 \
-                -lr 0.0002 \
-                -epochs 3 \
-                -steps_per_epoch 40 \
-                -batch_size 128 \
-                -train_ratio 0.8
+Finally, install the required packages using 
+`pip install -r requirements.txt`
 
-# 可以使用的loss有BCE, focal, deviation，但是感觉BCE就够了
+### Train
 
-python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
-                -cache_dir /home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/AirExperimentOutput.1/after_newtest_data \
-                -weight_name model.pkl \
-                -file_name_abnormal feedback.csv \
-                -file_name_normal normal.csv \
-                --use_cache \
-                -test_set train \
-                -data_type pageuser \
-                -max_seq_len 300 \
-                -vocab_dict_path experiment/assets/page2idx.json \
-                -vocab_size 10000 \
-                -backbone lstma \
-                -embedding_dim 280 \
-                -hidden_dim 200 \
-                -criterion WeightedBCE \
-                -weight 0.01 0.99 \
-                -sampler balanced \
-                -dropout 0.5 \
-                -lr 0.0002 \
-                -epochs 3 \
-                -steps_per_epoch 40 \
-                -batch_size 128 \
-                -train_ratio 0.8
-```
-
-### transformer based 
-
-transformer为backbone。
-
-训练的时候，主要可调的参数有**max_seq_len, embedding_dim, ffn_num_hiddens, num_heads, num_layers, batch_size**。
-
-注意：embedding_dim必须是num_heads的倍数
-
+下面的所有训练的代码，第一次运行时会生成cache文件。
+更改max_seq_len之后需要去掉--use_cache重新运行一遍！！！之后的运行可以指定cache参数。
+没更改max_seq_len参数的情况下，可使用--use_cache指定使用参数运行，以加速（不再进行数据处理）。
 
 ```bash
-# 第一次运行时生成cache文件，注意！！！更改max_seq_len之后需要去掉--cache重新运行一遍
 python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
+                -cache_dir /home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/train_data \
                 -weight_name model.pkl \
-                -file_name_abnormal feedback.csv \
-                -file_name_normal normal.csv \
-                -max_seq_len 200 \
-                -vocab_dict_path experiment/assets/page2idx.json \
-                -vocab_size 10000 \
-                -backbone transformer \
-                -embedding_dim 280 \
-                -ffn_num_hiddens 200 \
-                -num_heads 4 \
-                -num_layers 2 \
-                -dropout 0.5 \
-                -criterion BCE \
-                -weight 0.9 0.1 \
-                -lr 0.0002 \
-                -epochs 30 \
-                -steps_per_epoch 40 \
-                -batch_size 128 \
-                -train_ratio 0.8
-
-# 之后的运行可以指定cache参数。
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
-                -weight_name model.pkl \
-                -file_name_abnormal feedback.csv \
-                -file_name_normal normal.csv \
-                --use_cache \
-                -max_seq_len 200 \
-                -vocab_dict_path experiment/assets/page2idx.json \
-                -vocab_size 10000 \
-                -backbone transformer \
-                -embedding_dim 280 \
-                -ffn_num_hiddens 200 \
-                -num_heads 4 \
-                -num_layers 2 \
-                -dropout 0.5 \
-                -criterion BCE \
-                -weight 0.9 0.1 \
-                -lr 0.0002 \
-                -epochs 30 \
-                -steps_per_epoch 40 \
-                -batch_size 128 \
-                -train_ratio 0.8
-```
-
-### 按照user_id切分用户访问页面
-
-只要加上-data_type user即可(最好调一下max_seq_len参数调大一些，当然也不是说这么做就好，只是直觉上感觉，具体这么做有没有效果，调参决定)，注意！！！更改max_seq_len和data_type之后都需要去掉--cache重新运行一遍。
-
-第一次运行不加上--use_cache选项以生成cache，之后加上--use_cache选项。
-```bash
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
-                -cache_dir /home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/AirExperimentOutput.1/after_newtrain_data \
-                -weight_name model.pkl \
-                -file_name_abnormal feedback.csv \
-                -file_name_normal normal.csv \
-                --use_cache \
                 -data_type pageuser \
-                -max_seq_len 300 \
                 -vocab_dict_path experiment/assets/page2idx.json \
-                -vocab_size 10000 \
-                -backbone transformer \
-                -embedding_dim 360 \
-                -ffn_num_hiddens 1440 \
-                -num_heads 4 \
-                -num_layers 2 \
-                -dropout 0.5 \
-                -criterion WeightedBCE \
-                -weight 0.01 0.99 \
-                -sampler balanced \
-                -lr 0.0002 \
-                -epochs 2 \
-                -steps_per_epoch 40 \
-                -batch_size 128 \
-                -train_ratio 0.8
-```
-criterion：Contrastive, WeightedBCE, BCE, deviation, focal
-sampler: randomed, balanced, balanced_step
-
-测试
-```bash
-python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
-                -cache_dir /home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/AirExperimentOutput.1/after_newtest_data \
-                -weight_name model.pkl \
-                -file_name_abnormal feedback.csv \
-                -file_name_normal normal.csv \
-                --use_cache \
-                -test_set train \
-                -data_type pageuser \
                 -max_seq_len 300 \
-                -vocab_dict_path experiment/assets/page2idx.json \
                 -vocab_size 10000 \
                 -backbone transformer \
                 -embedding_dim 360 \
@@ -185,62 +49,54 @@ python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection
                 -train_ratio 0.8
 ```
 
-### 按照单词建立词典，而后建立向量
+参数解析：
+* -dataset_root，设置为数据集所在文件夹的绝对地址/相对地址，这个文件夹下应该有两个文件。
+  * 一个名为feedback,csv，其格式例如![feedback文件格式](README/feedback文件格式.png)。
+    * 第一列label为标签，全为1。代表feedback样本均为异常样本。
+    * 第二列user_id为用户的id。每一个user_id唯一的确认一个一个用户。
+    * 第三列page_name为页面的名称，每一个页面名称唯一的确认一个页面。
+    * 第四列session_id为session的id，每一个session_id唯一的确认一个session。
+    * 第五列date_time，需要为标准的date_time的时间格式。
+  * 一个名为normal.csv，其格式例如![normal文件格式](README/normal文件格式.png)。
+    * 第一列label为标签，全为0。代表normal样本均为正常样本。
+    * 第二列user_id为用户的id。每一个user_id唯一的确认一个一个用户。
+    * 第三列page_name为页面的名称，每一个页面名称唯一的确认一个页面。
+    * 第四列session_id为session的id，每一个session_id唯一的确认一个session。
+    * 第五列date_time，需要为标准的date_time的时间格式。
+* -cache_dir，不加上--user_cache选项时候，会依据-dataset_root下面的两个文件，即feedback,csv和normal.csv两个文件生成cache，存储在-cache_dir指定的文件夹下下的cache文件夹中。
+* -weight_name，指定训练生成的模型的名称，默认为model.pkl。会存放在-cache_dir指定的文件夹下的models文件夹中。
+* --use_cache，指定是否使用cache，若在-cache_dir指定的文件夹下没有cache文件夹，会报错，第一次运行不加--user_cache文件夹，会在-cache_dir指定的文件夹下生成cache文件夹。
+* -vocab_dict_path指定页面名称到其编码的字典。
+* 其它参数均为模型参数，这里使
+用默认即可。**embedding_dim**必须是**num_heads**的倍数。训练的时候，主要可调的参数有**max_seq_len, embedding_dim, ffn_num_hiddens, num_heads, num_layers, batch_size**。
 
-第一次运行不加上--use_cache选项以生成cache，之后加上--use_cache选项。
-```bash
-python train.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
-                -weight_name model.pkl \
-                -file_name_abnormal feedback.csv \
-                -file_name_normal normal.csv \
-                --use_cache \
-                -data_type worduser \
-                -max_seq_len 400 \
-                -vocab_dict_path experiment/assets/word2idx.json \
-                -vocab_size 10000 \
-                -backbone transformer \
-                -embedding_dim 512 \
-                -ffn_num_hiddens 400 \
-                -num_heads 4 \
-                -num_layers 2 \
-                -dropout 0.5 \
-                -criterion BCE \
-                -weight 0.9 0.1 \
-                -lr 0.0002 \
-                -epochs 30 \
-                -steps_per_epoch 40 \
-                -batch_size 128 \
-                -train_ratio 0.8
-```
+### Test
+测试。注意！！！用什么样子的参数训练，就要用什么样子的参数测试。
 
-## Test
-
-
-注意！！！用什么样子的参数训练，就要用什么样子的参数测试。
 ```bash
 python test.py -dataset_root=/home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/preprocess/ \
+                -cache_dir /home/hiyoungshen/Source/ICWS2023/AbnormalDetection/experiment/test_data \
                 -weight_name model.pkl \
                 -file_name_abnormal feedback.csv \
                 -file_name_normal normal.csv \
                 --use_cache \
-                -max_seq_len 300 \
+                -test_set train \
+                -data_type pageuser \
                 -vocab_dict_path experiment/assets/page2idx.json \
+                -max_seq_len 300 \
                 -vocab_size 10000 \
                 -backbone transformer \
-                -embedding_dim 380 \
-                -ffn_num_hiddens 300 \
+                -embedding_dim 360 \
+                -ffn_num_hiddens 1440 \
                 -num_heads 4 \
                 -num_layers 2 \
                 -dropout 0.5 \
-                -criterion BCE \
-                -weight 0.9 0.1 \
+                -criterion WeightedBCE \
+                -weight 0.01 0.99 \
+                -sampler balanced \
                 -lr 0.0002 \
-                -epochs 30 \
+                -epochs 2 \
                 -steps_per_epoch 40 \
                 -batch_size 128 \
                 -train_ratio 0.8
 ```
-
-## Reference
-
-["Explainable Deep Few-shot Anomaly Detection with Deviation Networks"](https://arxiv.org/abs/2108.00462)

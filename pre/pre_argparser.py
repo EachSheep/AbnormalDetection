@@ -15,29 +15,30 @@ parser.add_argument(
 
 # prepreprocess.py的参数
 parser.add_argument('-in_dir_prepre', type=str,
-                    default="../experiment/datasets/", help='input file directory') # 输入文件的目录
+                    default="/home/hiyoungshen/Source/Archive/ICWS2023/experiment/datasets", help='input file directory') # 输入文件的目录
 parser.add_argument('-feedback_names_prepre', nargs='+', default=["feedback.csv"], help='feedback file name') # 反馈文件的名字
 parser.add_argument('-normal_names_prepre', nargs='+', default=["normal.csv"], help='normal file name') # 正常文件的名字
 parser.add_argument('-output_dir_prepre', type=str, default="../experiment/prepreprocess/", help='output file name') # 输出的page2num文件夹的名字
+parser.add_argument('-output_set_prepre', type=str, default="../experiment/assets/", help='output json file name') # 输出的lowercase2uppercase.json存放的目录
 
 # g_page2num.py的参数
 parser.add_argument('-in_dir_gen', type=str,
                     default="../experiment/prepreprocess/", help='input file directory') # 输入文件的目录
 parser.add_argument('-feedback_names_gen', nargs='+', default=["feedback.csv"], help='feedback file name') # 反馈文件的名字
 parser.add_argument('-normal_names_gen', nargs='+', default=["normal.csv"], help='normal file name') # 正常文件的名字
-parser.add_argument('-output_dir_gen', type=str, default="../experiment/page2nums/", help='output file name') # 输出的page2num文件夹的名字
-parser.add_argument('-page2num_names_gen', nargs='+', default=["page2num-simulate.json"], help='page2num file name') # 输出的page2num文件的名字
+parser.add_argument('-output_dir_gen', type=str, default="../experiment/assets/", help='output file name') # 输出的page2num文件夹的名字
+parser.add_argument('-page2num_names_gen', nargs='+', default=["page2num.json"], help='page2num file name') # 输出的page2num文件的名字
 
 # g_lastword_dict.py的参数
-parser.add_argument('-page2num_dir', type=str, default='../experiment/page2nums/', help="orgin directory of page2num")  # page2num的原目录
-parser.add_argument('-page2num_names', nargs='+', default=['page2num-1.json'], help="orgin filename of page2num")  # page2num的原文件
+parser.add_argument('-page2num_dir', type=str, default='../experiment/assets/', help="orgin directory of page2num")  # page2num的原目录
+parser.add_argument('-page2num_names', nargs='+', default=['page2num.json'], help="orgin filename of page2num")  # page2num的原文件
+parser.add_argument('-output_dir_lastword', type=str, default="../experiment/assets/", help='output file name') # 输出的lastword_dict文件夹的名字
+parser.add_argument('-lastword_dict_names', nargs='+', default=['lastword_dict.json'], help="filename of lastword_dict")  # lastword_dict的文件名称
 parser.add_argument('--simulate', action='store_true',
                     default=False, help='if simulate or not')
-# g_word_dict.py除了和g_lastword_dict.py一样的参数外，还有
-parser.add_argument('-output_dir_word_dict', type=str, default="../experiment/assets/", help='output directory') # 
 
 # g_page_code.py的参数
-parser.add_argument('-lastword_dict_dir', type=str, default='../experiment/page2nums/', help="orgin directory of lastword_dict")  # lastword_dict的原目录
+parser.add_argument('-lastword_dict_dir', type=str, default='../experiment/assets/', help="orgin directory of lastword_dict")  # lastword_dict的原目录
 parser.add_argument('-lastword_dict_name', type=str, default='lastword_dict.json', help="orgin filename of lastword_dict")  # lastword_dict的原文件
 parser.add_argument('-output_dir_lastword_dict', type=str, default="../experiment/assets/", help='output directory') # 
 

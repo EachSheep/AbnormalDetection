@@ -91,21 +91,4 @@ class Tester(object):
         normal_sample = np.sum(total_target == 0)
         abnormal_sample = np.sum(total_target == 1)
         print("normal data vs. abnormal data: ", normal_sample, abnormal_sample, "ratio: ", abnormal_sample / (normal_sample + abnormal_sample))
-        # 20: normal data vs. abnormal data:  403142 6428 ratio:  0.015694508875161755
-        # 50: normal data vs. abnormal data:  440255 10030 ratio: 0.022274781527254962
-        # 100: normal data vs. abnormal data:  200878 7284 ratio: 0.03499197740221558   76.3900 = 0.00036697379925250526
-        # 200: normal data vs. abnormal data:  89278 4790 ratio:  0.05092061062210316   34.7053 = 0.00036893842752051706
-        # 300: normal data vs. abnormal data:  32102 2323 ratio:  0.0674800290486565    13.0781 = 0.0003799012345679012
-        # all: normal data vs. abnormal data:  1165655 30855 ratio:  0.02578749864188348 444.1302 = 0.0003711880385454363
-
-        # precision, recall, thresholds = precision_recall_curve(total_target, total_pred)
-        # fig = plt.figure()
-        # ax = fig.add_subplot(111)
-        # ax.plot(recall, precision)
-        # ax.set_xlabel('Recall')
-        # ax.set_ylabel('Precision')
-        # ax.set_title('PR Curve')
-        # figures_dir = os.path.join(self.args.experiment_dir, "figures")
-        # plt.savefig(os.path.join(figures_dir, f'pr_curve-test.png'), bbox_inches='tight')
-
         return roc_auc, pr_auc, best_precision, best_recall, best_F1,  test_loss / epoch_num, total_target, total_pred, total_uid

@@ -59,6 +59,9 @@ if __name__ == "__main__":
                       for page2num_name in pre_args.page2num_names]
     page2num_jsons = [json.load(open(page2num_path, 'r'))
                       for page2num_path in page2num_paths]
+    output_dir_lastword_dict = pre_args.output_dir_lastword_dict
+
+
     page2num = {}
     for page2num_json in page2num_jsons:
         for page, num in page2num_json.items():
@@ -66,17 +69,17 @@ if __name__ == "__main__":
                 page2num[page] += num
             else:
                 page2num[page] = num
-
+    
     afterwash_dict = preprocess(page2num)
-    page2num_afterwash_path = os.path.join(
-        pre_args.page2num_dir, "page2num_afterwash_encodepage.json")
-    json.dump(afterwash_dict, open(
-        page2num_afterwash_path, 'w'), indent=4)
+    # page2num_afterwash_path = os.path.join(
+    #     pre_args.page2num_dir, "page2num_afterwash_encodepage.json")
+    # json.dump(afterwash_dict, open(
+    #     page2num_afterwash_path, 'w'), indent=4)
 
     page2idx, idx2page = encode_page(afterwash_dict)
     page2idx_path = os.path.join(
-        pre_args.output_dir_lastword_dict, "page2idx.json")
+        output_dir_lastword_dict, "page2idx.json")
     idx2page_path = os.path.join(
-        pre_args.output_dir_lastword_dict, "idx2page.json")
+        output_dir_lastword_dict, "idx2page.json")
     json.dump(page2idx, open(page2idx_path, "w"), indent=4)
     json.dump(idx2page, open(idx2page_path, "w"), indent=4)

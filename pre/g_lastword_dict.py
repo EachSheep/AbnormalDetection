@@ -110,6 +110,9 @@ if __name__ == "__main__":
                       for page2num_name in pre_args.page2num_names]
     page2num_jsons = [json.load(open(page2num_path, 'r'))
                       for page2num_path in page2num_paths]
+    output_dir = pre_args.output_dir_lastword
+    lastword_dict_name = pre_args.lastword_dict_names[0]
+
     page2num = {}
     for page2num_json in page2num_jsons:
         for page, num in page2num_json.items():
@@ -119,9 +122,8 @@ if __name__ == "__main__":
                 page2num[page] = num
 
     lastword_list = generate_lastword_list(page2num)
-
-    output_dir = pre_args.page2num_dir
+    
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     json.dump(lastword_list, open(os.path.join(output_dir,
-                                               "lastword_dict.json"), "w"), indent=4)
+                                               lastword_dict_name), "w"), indent=4)
