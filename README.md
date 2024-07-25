@@ -1,5 +1,7 @@
 # Abnormal Detection
 
+Official Code of "ADPal: Automatic Detection of Troubled Users in Online Service Systems via Page Access Logs".
+
 ## Setup 
 
 Install with `pip install -r requirements.txt`.
